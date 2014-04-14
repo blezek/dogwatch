@@ -1,0 +1,68 @@
+apply plugin: 'java'
+apply plugin: 'gradle-one-jar'
+apply plugin: 'application'
+apply plugin: 'eclipse'
+
+// Use Java 7 by default
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+
+// UTF-8 should be standard by now. So use it!
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+// The main class of the application
+mainClassName = 'com.github.dogwatch.DogWatch'
+
+// Add Gradle OneJar Plugin, see https://github.com/rholder/gradle-one-jar
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.github.rholder:gradle-one-jar:1.0.3'
+    }
+}
+
+// Set our project variables
+project.ext {
+    dropwizardVersion = '0.7.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile (
+       'io.dropwizard:dropwizard-core:' + dropwizardVersion,
+       'io.dropwizard:dropwizard-hibernate:' + dropwizardVersion,
+       'io.dropwizard:dropwizard-jdbi:' + dropwizardVersion,
+       'io.dropwizard:dropwizard-migrations:' + dropwizardVersion,
+       'io.dropwizard:dropwizard-auth:' + dropwizardVersion,
+       'org.apache.derby:derby:10.10.1.1',
+       'com.googlecode.flyway:flyway-core:2.3.1',
+       'org.quartz-scheduler:quartz:2.2.1',
+       'org.reflections:reflections:0.9.9-RC1',
+       'org.apache.commons:commons-email:1.3.2'
+    )
+}
+
+// Configure the oneJar task
+task oneJar(type: OneJar) {
+    mainClass = mainClassName
+}
+
+// Configure the run task to start the Dropwizard service
+run {
+    args 'server', './src/dist/config/dogwatch.yml'
+
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.11'
+}
+
+artifacts {
+    oneJar
+}
