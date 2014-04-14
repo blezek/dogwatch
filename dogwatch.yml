@@ -1,0 +1,11 @@
+
+
+
+
+# Database connection info
+database:
+  driverClass: org.apache.derby.jdbc.EmbeddedDriver
+  url: jdbc:derby:directory:./DB;create=true
+  validationQuery: "VALUES 1"
+  user: dogwatch
+  password: dogwatch
