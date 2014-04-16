@@ -1,6 +1,7 @@
 package com.github.dogwatch.jobs;
 
 import static org.quartz.JobBuilder.newJob;
+import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.lifecycle.Managed;
 
 import java.util.HashMap;
@@ -12,7 +13,11 @@ import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.DirectSchedulerFactory;
+import org.quartz.impl.jdbcjobstore.JobStoreTX;
+import org.quartz.simpl.SimpleThreadPool;
+import org.quartz.utils.DBConnectionManager;
+import org.quartz.utils.PoolingConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,9 +27,21 @@ public class JobManager implements Managed {
   protected Scheduler scheduler;
   Map<JobDetail, String> jobs = new HashMap<JobDetail, String>();
 
+  public JobManager(DataSourceFactory dsFactory) throws Exception {
+
+    DBConnectionManager.getInstance().addConnectionProvider("internal", new PoolingConnectionProvider(dsFactory.getDriverClass(), dsFactory.getUrl(), dsFactory.getUser(), dsFactory.getPassword(), 10, "VALUES 1"));
+
+    JobStoreTX jdbcJobStore = new JobStoreTX();
+    jdbcJobStore.setDataSource("internal");
+
+    SimpleThreadPool threadPool = new SimpleThreadPool(10, Thread.NORM_PRIORITY);
+    DirectSchedulerFactory.getInstance().createScheduler(threadPool, jdbcJobStore);
+    scheduler = DirectSchedulerFactory.getInstance().getScheduler();
+
+  }
+
   @Override
   public void start() throws Exception {
-    scheduler = StdSchedulerFactory.getDefaultScheduler();
     scheduler.start();
     for (JobDetail job : jobs.keySet()) {
       String cron = jobs.get(job);

@@ -10,7 +10,7 @@ public class LookoutJob extends Job {
   @Override
   public void doJob(JobExecutionContext context) {
     // Check on any missed watches
-    logger.info("Looking for missing heartbeats");
+    // logger.info("Looking for missing heartbeats");
   }
 
 }

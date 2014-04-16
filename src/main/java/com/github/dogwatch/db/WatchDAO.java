@@ -1,34 +1,32 @@
 package com.github.dogwatch.db;
 
-import io.dropwizard.hibernate.AbstractDAO;
-
 import java.util.List;
 
+import org.apache.shiro.subject.Subject;
+import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 
+import com.github.dogwatch.core.Heartbeat;
 import com.github.dogwatch.core.Watch;
-import com.google.common.base.Optional;
 
-public class WatchDAO extends AbstractDAO<Watch> {
+public class WatchDAO extends SimpleDAO<Watch> {
 
   public WatchDAO(SessionFactory sessionFactory) {
     super(sessionFactory);
   }
 
-  public Optional<Watch> findById(Long id) {
-    return Optional.fromNullable(get(id));
+  public List<Watch> findAllForSubject(Subject subject) {
+    Criteria c = currentSession().createCriteria(Watch.class, "w");
+    c.addOrder(Order.desc("w.timestamp"));
+    c.createAlias("users", "u", JoinType.INNER_JOIN, Restrictions.eq("email", subject.getPrincipal()));
+    return c.list();
   }
 
-  public Watch create(Watch watch) {
-    return persist(watch);
+  List<Heartbeat> lastHeartbeats(Watch watch, int count) {
+    return null;
   }
 
-  @SuppressWarnings("unchecked")
-  public List<Watch> findAll() {
-    return currentSession().createCriteria(Watch.class).list();
-  }
-
-  public Watch update(Watch watch) {
-    return update(watch);
-  }
 }

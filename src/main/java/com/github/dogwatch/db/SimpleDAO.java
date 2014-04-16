@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 
+import com.github.dogwatch.core.Watch;
 import com.google.common.base.Optional;
 
 public class SimpleDAO<T> extends AbstractDAO<T> {
@@ -29,5 +30,9 @@ public class SimpleDAO<T> extends AbstractDAO<T> {
 
   public T update(T t) {
     return update(t);
+  }
+
+  public void delete(Watch watch) {
+    currentSession().delete(watch);
   }
 }

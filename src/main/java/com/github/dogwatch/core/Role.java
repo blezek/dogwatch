@@ -1,32 +1,27 @@
 package com.github.dogwatch.core;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "user_role")
+public class Role {
 
   @Id
   @Column(name = "id")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   public long id;
 
-  public String email;
-  public String password;
-  public String salt;
-  public Boolean activated = false;
-  public String activation_hash;
+  @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+  @JoinColumn(name = "user_id")
+  public User user;
 
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-  public Set<Role> roles = new HashSet<Role>();
+  public String role;
 }
