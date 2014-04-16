@@ -7,3 +7,6 @@
 .gradle/1.11/taskArtifacts/taskArtifacts.bin
 .gradle/1.11/taskArtifacts
 derby.log
+ui/bower_components
+ui/node_modules
+ui/public
