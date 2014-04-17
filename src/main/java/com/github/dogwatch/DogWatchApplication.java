@@ -29,9 +29,9 @@ import com.github.dogwatch.db.SimpleDAO;
 import com.github.dogwatch.db.WatchDAO;
 import com.github.dogwatch.jobs.JobManager;
 import com.github.dogwatch.managed.DBWebServer;
-import com.github.dogwatch.managed.FlywayMigration;
 import com.github.dogwatch.resources.LoginResource;
 import com.github.dogwatch.resources.WatchResource;
+import com.googlecode.flyway.core.Flyway;
 
 public class DogWatchApplication extends Application<DogWatchConfiguration> {
   static Logger logger = LoggerFactory.getLogger(DogWatchApplication.class);
@@ -79,17 +79,16 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
   @Override
   public void run(DogWatchConfiguration configuration, Environment environment) throws Exception {
     environment.servlets().setSessionHandler(new SessionHandler());
-
-    final FlywayMigration migration = new FlywayMigration(configuration.getDataSourceFactory());
-    environment.lifecycle().manage(migration);
+    Flyway flyway = new Flyway();
+    flyway.setDataSource(configuration.getDataSourceFactory().getUrl(), configuration.getDataSourceFactory().getUser(), configuration.getDataSourceFactory().getPassword());
+    flyway.migrate();
 
     if (configuration.dbWeb != null) {
       environment.lifecycle().manage(new DBWebServer(configuration.dbWeb));
     }
 
     JobManager jobManager = new JobManager(configuration.getDataSourceFactory());
-    // jobManager.cronSchedule(LookoutJob.class, "0/15 * * * * ?", "watchDAO",
-    // watchDAO, "heartbeatDAO", heartbeatDAO);
+
     environment.lifecycle().manage(jobManager);
 
     final WatchDAO watchDAO = new WatchDAO(hibernate.getSessionFactory());

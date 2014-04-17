@@ -7,20 +7,24 @@
       <table class="table table-striped table-hover table-condensed">
         <thead>
           <tr>
-            <td>AETitle</td>
-            <td>Hostname</td>
-            <td>Port</td>
-            <td>Description</td>
+<td>Name</td>
+<td>Status</td>
+<td>Cron</td>
+<td>Worry After</td>
+            <td>Last Check</td>
+            <td>Next Check</td>
             <td></td>
         </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="device in deviceCollection.models">
-            <td>{{device.get('applicationEntityTitle')}}</td>
-            <td>{{device.get('hostName')}}</td>
-            <td>{{device.get('port')}}</td>
-            <td>{{device.get('description')}}</td>
-            <td><i class="fa fa-edit" ng-click="editDevice(device)"></i></td>
+          <tr ng-repeat="watch in watches.models">
+<td>{{watch.get('name')}}</td>
+<td>{{watch.get('status')}}</td>
+<td>{{watch.get('cron')}}</td>
+<td>{{watch.get('worry')}}</td>
+<td>{{watch.get('last_check')}}</td>
+<td>{{watch.get('next_check')}}</td>
+            <td><i class="fa fa-edit" ng-click="editWatch(device)"></i></td>
           </tr>
         </tbody>
       </table>

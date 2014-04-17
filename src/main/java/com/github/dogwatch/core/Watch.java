@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.joda.time.DateTime;
@@ -42,6 +43,8 @@ public class Watch {
   public String name;
   public String uid;
   public String cron;
+  public String status;
+  public String description;
   public int worry;
   public boolean active;
   public Timestamp next_check;
@@ -50,6 +53,9 @@ public class Watch {
   @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinTable(name = "watch_user", joinColumns = { @JoinColumn(name = "watch_id") }, inverseJoinColumns = { @JoinColumn(name = "user_id") })
   public Set<User> users = new HashSet<User>();
+
+  @ManyToOne
+  public User user;
 
   public void scheduleCheck(Scheduler scheduler, CronExpression expression) throws Exception {
 
@@ -73,7 +79,7 @@ public class Watch {
     t.plusMinutes(worry);
 
     Trigger trigger = TriggerBuilder.newTrigger().startAt(t.toDate()).forJob(jobBuilder).build();
-    scheduler.scheduleJob(trigger);
+    scheduler.scheduleJob(jobBuilder, trigger);
     next_check = new Timestamp(t.getMillis());
   }
 }

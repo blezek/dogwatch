@@ -11,6 +11,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.crypto.hash.Sha512Hash;
 import org.apache.shiro.subject.Subject;
@@ -40,9 +41,12 @@ public class LoginResource {
     if (username == null || password == null) {
       return Response.serverError().entity("username and password required").build();
     }
-
-    subject.login(new UsernamePasswordToken(username, password, remember));
-    return Response.ok(username).build();
+    try {
+      subject.login(new UsernamePasswordToken(username, password, remember));
+    } catch (AuthenticationException e) {
+      return Response.serverError().entity(new SimpleResponse("message", "Login failed")).build();
+    }
+    return Response.ok(new SimpleResponse("message", username)).build();
   }
 
   @UnitOfWork

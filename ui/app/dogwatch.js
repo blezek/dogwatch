@@ -91,6 +91,9 @@ dogwatchApp.controller ( 'LoginController', function($scope,$http,$location) {
     })
       .success(function(data) {
         $location.url('/');
+    })
+    .error(function(data, status, headers, config) {
+      $scope.error = data.message
     });
   };
 });
@@ -116,14 +119,44 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
     })
       .success(function(data) {
         $location.url('/');
+    })
+    .error(function(data, status, headers, config) {
+      $scope.error = data.message
     });
   };
 });
 
 
 
-  dogwatchApp.controller ( 'WatchController', function($scope,$timeout,$state,$http) {
-    console.log("Starting WatchController")
+  dogwatchApp.controller ( 'WatchController', function($scope,$timeout,$state,$http,$modal) {
+    console.log("Starting WatchController");
+    $scope.watches = new WatchCollection();
+    $scope.watches.fetch({remove:true,async:false})
+
+    $scope.editWatch = function(watch) {
+      var title = "Edit the watch"
+      if ( !watch ) {
+        title = "create a new watch"
+        watch = new WatchModel();
+      }
+      $scope.watch = watch
+      $modal.open({
+        templateUrl: 'partials/watch.edit.html',
+        scope: $scope,
+        controller: function($scope,$modalInstance) {
+          $scope.title = title
+          $scope.watchModel = watch.toJSON();
+          $scope.save = function(){
+            watch.set ( $scope.watchModel )
+            $scope.watches.add(watch)
+            watch.save();
+            $modalInstance.close();
+          };
+          $scope.cancel = function() { $modalInstance.dismiss() };
+        }
+      })
+    }
+
   });
 
   dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$location,$http) {

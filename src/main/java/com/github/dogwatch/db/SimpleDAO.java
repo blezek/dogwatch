@@ -29,7 +29,8 @@ public class SimpleDAO<T> extends AbstractDAO<T> {
   }
 
   public T update(T t) {
-    return update(t);
+    currentSession().saveOrUpdate(t);
+    return t;
   }
 
   public void delete(Watch watch) {
