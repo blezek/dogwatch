@@ -22,3 +22,13 @@ shiro:
 assets:
   overrides:
     /dogwatch: /Users/blezek/Source/dogwatch/ui/public
+
+
+# Email configuration
+email:
+  from: quintherug@gmail.com
+  smtpHostname: smtp.googlemail.com
+  port: 465
+  username: quintherug
+  password: quinthedog
+  ssl: true
