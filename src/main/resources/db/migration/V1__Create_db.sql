@@ -9,6 +9,7 @@ create table watches (
   description varchar(255),
   uid varchar(512),
   cron varchar(128) NOT NULL,
+  explanation varchar(128) NOT NULL,
   worry int,
   status varchar(32),
   active boolean,

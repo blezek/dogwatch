@@ -33,6 +33,8 @@ require(['angular', 'angularAMD', "backbone", 'angular-ui-router', 'ui-bootstrap
 
   WatchModel = Backbone.Model.extend({
     defaults: {
+      worry: 10,
+      cron: "0 0 * * * ?"
     }
   });
 
@@ -67,6 +69,15 @@ require(['angular', 'angularAMD', "backbone", 'angular-ui-router', 'ui-bootstrap
       url: "/register",
       templateUrl: 'partials/register.html',
       controller: 'RegisterController'
+    }).state('hash', {
+      abstract: false,
+      url: "/hash",
+      templateUrl: 'partials/hash.html',
+      controller: 'LoginController'
+    }).state('hasherror', {
+      abstract: false,
+      url: "/hash/error",
+      templateUrl: 'partials/hash.error.html'
     })
   });
 
@@ -146,13 +157,31 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
         controller: function($scope,$modalInstance) {
           $scope.title = title
           $scope.watchModel = watch.toJSON();
+          $scope.valid = false
+
+          $scope.validate = function(){
+            watch.set($scope.watchModel);
+            $http.post("/rest/watch/validate", watch)
+            .success(function(data) {
+              $scope.valid = data.valid
+              $scope.explanation = ""
+              $scope.error = data.messages.join("\n");
+              if ( data.explanation ) {
+                $scope.explanation = " (" + data.explanation + ")";
+              }
+            });
+          }
+
+
           $scope.save = function(){
             watch.set ( $scope.watchModel )
+            // Add emails!
             $scope.watches.add(watch)
             watch.save();
             $modalInstance.close();
           };
           $scope.cancel = function() { $modalInstance.dismiss() };
+          $scope.validate();
         }
       })
     }

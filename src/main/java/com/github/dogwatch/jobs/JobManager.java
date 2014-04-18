@@ -27,9 +27,9 @@ public class JobManager implements Managed {
   protected Scheduler scheduler;
   Map<JobDetail, String> jobs = new HashMap<JobDetail, String>();
 
-  public JobManager(DataSourceFactory dsFactory) throws Exception {
+  public JobManager(DataSourceFactory dataSourceFactory) throws Exception {
 
-    DBConnectionManager.getInstance().addConnectionProvider("internal", new PoolingConnectionProvider(dsFactory.getDriverClass(), dsFactory.getUrl(), dsFactory.getUser(), dsFactory.getPassword(), 10, "VALUES 1"));
+    DBConnectionManager.getInstance().addConnectionProvider("internal", new PoolingConnectionProvider(dataSourceFactory.getDriverClass(), dataSourceFactory.getUrl(), dataSourceFactory.getUser(), dataSourceFactory.getPassword(), 10, "VALUES 1"));
 
     JobStoreTX jdbcJobStore = new JobStoreTX();
     jdbcJobStore.setDataSource("internal");

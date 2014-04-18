@@ -3,6 +3,8 @@ package com.github.dogwatch.resources;
 import io.dropwizard.hibernate.UnitOfWork;
 
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -15,14 +17,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import net.redhogs.cronparser.CronExpressionDescriptor;
+
 import org.apache.shiro.subject.Subject;
 import org.quartz.CronExpression;
 import org.quartz.Scheduler;
 import org.secnod.shiro.jaxrs.Auth;
 
+import com.github.dogwatch.Singletons;
 import com.github.dogwatch.core.Watch;
 import com.github.dogwatch.db.WatchDAO;
-import com.github.dogwatch.jobs.JobManager;
 
 @Path("/rest/watch")
 public class WatchResource {
@@ -30,9 +34,9 @@ public class WatchResource {
   private final WatchDAO watchDAO;
   Scheduler scheduler;
 
-  public WatchResource(WatchDAO watchDAO, JobManager jobManager) {
+  public WatchResource(WatchDAO watchDAO) {
     this.watchDAO = watchDAO;
-    this.scheduler = jobManager.getScheduler();
+    this.scheduler = Singletons.jobManager.getScheduler();
   }
 
   @GET
@@ -40,6 +44,33 @@ public class WatchResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getWatches(@Auth Subject subject) {
     return Response.ok(watchDAO.findAllForSubject(subject)).build();
+  }
+
+  @Path("/validate")
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response validateWatch(Watch watch) {
+    List<String> messages = new ArrayList<String>();
+    SimpleResponse r = new SimpleResponse("explanation", "");
+    r.put("valid", true);
+    if (watch.name == null) {
+      messages.add("Please give your watch a name");
+      r.put("valid", false);
+    }
+    if (watch.worry < 1) {
+      messages.add("Worry time must be greater than 1 minute");
+      r.put("valid", false);
+    }
+    try {
+      new CronExpression(watch.cron);
+      r.put("explanation", CronExpressionDescriptor.getDescription(watch.cron));
+    } catch (ParseException e) {
+      messages.add("Error parsing cron expression at character " + e.getErrorOffset() + " '" + e.getLocalizedMessage() + "'");
+      r.put("valid", false);
+    }
+    r.put("messages", messages);
+    return Response.ok(r).build();
   }
 
   @POST
@@ -54,6 +85,7 @@ public class WatchResource {
     CronExpression expression;
     try {
       expression = new CronExpression(watch.cron);
+      watch.explanation = CronExpressionDescriptor.getDescription(watch.cron);
       watch = watchDAO.create(watch);
       watch.scheduleCheck(scheduler, expression);
       watch = watchDAO.update(watch);

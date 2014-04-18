@@ -26,9 +26,11 @@ import com.github.dogwatch.core.Role;
 import com.github.dogwatch.core.User;
 import com.github.dogwatch.core.Watch;
 import com.github.dogwatch.db.SimpleDAO;
+import com.github.dogwatch.db.UserDAO;
 import com.github.dogwatch.db.WatchDAO;
 import com.github.dogwatch.jobs.JobManager;
 import com.github.dogwatch.managed.DBWebServer;
+import com.github.dogwatch.resources.ActivateResource;
 import com.github.dogwatch.resources.LoginResource;
 import com.github.dogwatch.resources.WatchResource;
 import com.googlecode.flyway.core.Flyway;
@@ -54,7 +56,7 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     @Override
     protected Collection<Realm> createRealms(DogWatchConfiguration configuration, Environment environment) throws Exception {
       JdbcRealm realm = new JdbcRealm();
-      realm.setDataSource(configuration.getDataSourceFactory().build(environment.metrics(), "shiro"));
+      realm.setDataSource(Singletons.dataSource);
       realm.setSaltStyle(SaltStyle.COLUMN);
       realm.setAuthenticationQuery("select password, salt from users where email = ?");
       realm.setUserRolesQuery("select roles.role from roles, user_role, users where roles.id = user_role.id and users.id = user_role.user_id and users.email = ?");
@@ -78,26 +80,33 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
 
   @Override
   public void run(DogWatchConfiguration configuration, Environment environment) throws Exception {
-    environment.servlets().setSessionHandler(new SessionHandler());
+    // Globals
+    Singletons.threadPool = environment.lifecycle().executorService("dogwatch").build();
+    Singletons.configuration = configuration;
+    Singletons.environment = environment;
+    Singletons.dataSource = configuration.getDataSourceFactory().build(environment.metrics(), "dogwatch");
+    Singletons.jobManager = new JobManager(configuration.getDataSourceFactory());
+
     Flyway flyway = new Flyway();
-    flyway.setDataSource(configuration.getDataSourceFactory().getUrl(), configuration.getDataSourceFactory().getUser(), configuration.getDataSourceFactory().getPassword());
+    flyway.setDataSource(Singletons.dataSource);
     flyway.migrate();
+
+    environment.servlets().setSessionHandler(new SessionHandler());
 
     if (configuration.dbWeb != null) {
       environment.lifecycle().manage(new DBWebServer(configuration.dbWeb));
     }
 
-    JobManager jobManager = new JobManager(configuration.getDataSourceFactory());
-
-    environment.lifecycle().manage(jobManager);
+    environment.lifecycle().manage(Singletons.jobManager);
 
     final WatchDAO watchDAO = new WatchDAO(hibernate.getSessionFactory());
     SimpleDAO<Heartbeat> heartbeatDAO = new SimpleDAO<Heartbeat>(hibernate.getSessionFactory());
-    environment.jersey().register(new WatchResource(watchDAO, jobManager));
+    environment.jersey().register(new WatchResource(watchDAO));
 
     // Login
-    final SimpleDAO<User> userDAO = new SimpleDAO<User>(hibernate.getSessionFactory());
+    final UserDAO userDAO = new UserDAO(hibernate.getSessionFactory());
     environment.jersey().register(new LoginResource(userDAO, HashIterations));
+    environment.jersey().register(new ActivateResource(userDAO));
 
   }
 

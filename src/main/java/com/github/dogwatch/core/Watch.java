@@ -43,6 +43,7 @@ public class Watch {
   public String name;
   public String uid;
   public String cron;
+  public String explanation;
   public String status;
   public String description;
   public int worry;
@@ -72,7 +73,7 @@ public class Watch {
     if (last_check != null) {
       triggerStartTime = expression.getNextValidTimeAfter(last_check);
     } else {
-      triggerStartTime = expression.getNextInvalidTimeAfter(new Date());
+      triggerStartTime = expression.getNextValidTimeAfter(new Date());
     }
     // Add our watch amount...
     DateTime t = new DateTime(triggerStartTime.getTime());

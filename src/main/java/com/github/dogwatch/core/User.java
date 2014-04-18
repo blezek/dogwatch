@@ -29,4 +29,5 @@ public class User {
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
   public Set<Role> roles = new HashSet<Role>();
+
 }

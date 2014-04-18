@@ -11,13 +11,17 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.HtmlEmail;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.crypto.hash.Sha512Hash;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ByteSource;
 import org.secnod.shiro.jaxrs.Auth;
+import org.slf4j.LoggerFactory;
 
+import com.github.dogwatch.Singletons;
 import com.github.dogwatch.core.Role;
 import com.github.dogwatch.core.User;
 import com.github.dogwatch.db.SimpleDAO;
@@ -79,6 +83,27 @@ public class LoginResource {
     role.user = user;
     user.roles.add(role);
     user = userDAO.create(user);
+    sendActivationEmail(user);
     return username;
   }
+
+  void sendActivationEmail(final User user) {
+    Singletons.threadPool.execute(new Runnable() {
+
+      @Override
+      public void run() {
+        try {
+          HtmlEmail email = Singletons.newEmail();
+          email.setSubject("Welocome to DogWatch");
+          email.setMsg("Click here to activate: http://localhost:8080/dogwatch/activate/" + user.activation_hash + "\nYour friendly dog watch robot!\n");
+          email.addTo(user.email);
+          email.send();
+        } catch (EmailException e) {
+          LoggerFactory.getLogger(LoginResource.class).error("error sending email", e);
+        }
+      }
+    });
+
+  }
+
 }
