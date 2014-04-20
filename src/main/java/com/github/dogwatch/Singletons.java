@@ -11,6 +11,7 @@ import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.ImageHtmlEmail;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dogwatch.jobs.JobManager;
 
 public class Singletons {
@@ -19,6 +20,7 @@ public class Singletons {
   public static DogWatchConfiguration configuration;
   public static Environment environment;
   public static JobManager jobManager;
+  public static ObjectMapper objectMapper;
 
   public static HtmlEmail newEmail() throws EmailException {
     HtmlEmail email = new ImageHtmlEmail();

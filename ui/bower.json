@@ -28,6 +28,7 @@
     "angular-ui-bootstrap-bower": "~0.10.0",
     "angular-ui-ace": "~0.1.0",
     "font-awesome": "~4.0.3",
-    "jquery": "git://github.com/jquery/jquery.git#~2.1.0"
+    "jquery": "git://github.com/jquery/jquery.git#~2.1.0",
+    "momentjs": "~2.6.0"
   }
 }

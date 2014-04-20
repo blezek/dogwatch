@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bazaarvoice.dropwizard.assets.ConfiguredAssetsBundle;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.github.dogwatch.bundle.CustomShiroBundle;
 import com.github.dogwatch.core.Heartbeat;
 import com.github.dogwatch.core.Role;
@@ -39,10 +40,17 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
   static Logger logger = LoggerFactory.getLogger(DogWatchApplication.class);
   static int HashIterations = 100;
 
-  private final HibernateBundle<DogWatchConfiguration> hibernate = new HibernateBundle<DogWatchConfiguration>(Watch.class, User.class, Role.class) {
+  private final HibernateBundle<DogWatchConfiguration> hibernate = new HibernateBundle<DogWatchConfiguration>(Watch.class, User.class, Role.class, Heartbeat.class) {
     @Override
     public DataSourceFactory getDataSourceFactory(DogWatchConfiguration configuration) {
       return configuration.getDataSourceFactory();
+    }
+
+    @Override
+    protected void configure(org.hibernate.cfg.Configuration configuration) {
+      super.configure(configuration);
+      configuration.setProperty("hibernate.show_sql", "true");
+      configuration.setProperty("show_sql", "true");
     }
   };
 
@@ -80,12 +88,15 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
 
   @Override
   public void run(DogWatchConfiguration configuration, Environment environment) throws Exception {
+    // Register Joda time
+    environment.getObjectMapper().registerModule(new JodaModule());
     // Globals
     Singletons.threadPool = environment.lifecycle().executorService("dogwatch").build();
     Singletons.configuration = configuration;
     Singletons.environment = environment;
     Singletons.dataSource = configuration.getDataSourceFactory().build(environment.metrics(), "dogwatch");
     Singletons.jobManager = new JobManager(configuration.getDataSourceFactory());
+    Singletons.objectMapper = environment.getObjectMapper();
 
     Flyway flyway = new Flyway();
     flyway.setDataSource(Singletons.dataSource);
@@ -100,17 +111,19 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     environment.lifecycle().manage(Singletons.jobManager);
 
     final WatchDAO watchDAO = new WatchDAO(hibernate.getSessionFactory());
+    final UserDAO userDAO = new UserDAO(hibernate.getSessionFactory());
     SimpleDAO<Heartbeat> heartbeatDAO = new SimpleDAO<Heartbeat>(hibernate.getSessionFactory());
-    environment.jersey().register(new WatchResource(watchDAO));
+
+    environment.jersey().register(new WatchResource(watchDAO, userDAO));
 
     // Login
-    final UserDAO userDAO = new UserDAO(hibernate.getSessionFactory());
     environment.jersey().register(new LoginResource(userDAO, HashIterations));
     environment.jersey().register(new ActivateResource(userDAO));
 
   }
 
   public static void main(String[] args) throws Exception {
+    System.setProperty("java.awt.headless", "true");
     new DogWatchApplication().run(args);
   }
 

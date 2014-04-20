@@ -10,6 +10,7 @@ public class LookoutJob extends Job {
   @Override
   public void doJob(JobExecutionContext context) {
     // Check on any missed watches
+    logger.info("Looking at Job: " + context.getJobDetail().getJobDataMap().get("id"));
     // logger.info("Looking for missing heartbeats");
   }
 

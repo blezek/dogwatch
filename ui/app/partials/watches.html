@@ -17,14 +17,14 @@
         </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="watch in watches.models">
-<td>{{watch.get('name')}}</td>
-<td>{{watch.get('status')}}</td>
-<td>{{watch.get('cron')}}</td>
-<td>{{watch.get('worry')}}</td>
-<td>{{watch.get('last_check')}}</td>
-<td>{{watch.get('next_check')}}</td>
-            <td><i class="fa fa-edit" ng-click="editWatch(device)"></i></td>
+          <tr  ng-repeat="watch in watches.models | orderBy:'id'">
+            <td>{{watch.get('name')}} <i class="fa fa-rss-square" ng-click="show(watch)"></td>
+            <td>{{watch.get('status') ? watch.get("status") : 'none reported'}}</td>
+            <td>{{watch.get('cron')}} ({{watch.get("explanation")}})</td>
+            <td>{{watch.get('worry')}}</td>
+            <td>{{watch.get('last_check') ? moment(watch.get("last_check")).fromNow() : "never" }}</td>
+            <td>{{moment ( watch.get('next_check') ).fromNow()}}</td>
+            <td><i class="fa fa-edit" ng-click="editWatch(watch)"></i></td>
           </tr>
         </tbody>
       </table>

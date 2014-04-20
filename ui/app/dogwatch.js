@@ -18,7 +18,7 @@ require.config({
 })
 
 // To work, the model, angular and angularAMD packages are required
-require(['angular', 'angularAMD', "backbone", 'angular-ui-router', 'ui-bootstrap-tpls', 'ui-ace', 'ace/ace' ], function(angular, angularAMD, Backbone ) {
+require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui-bootstrap-tpls', 'ui-ace', 'ace/ace' ], function(angular, angularAMD, Backbone, moment ) {
 
   // Helper for shortening strings
   String.prototype.trunc = String.prototype.trunc ||
@@ -41,6 +41,12 @@ require(['angular', 'angularAMD', "backbone", 'angular-ui-router', 'ui-bootstrap
   WatchCollection = Backbone.Collection.extend({
     model: WatchModel,
     url: '/rest/watch',
+  });
+
+  CheckModel = Backbone.Model.extend({});
+  CheckCollection = Backbone.Collection.extend({
+    model: CheckModel,
+    url: function () { return this.urlRoot; },
   });
 
   dogwatchApp = angular.module('dogwatchApp', ['ui.router', 'ui.bootstrap', 'ui.ace']);
@@ -143,11 +149,28 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
     console.log("Starting WatchController");
     $scope.watches = new WatchCollection();
     $scope.watches.fetch({remove:true,async:false})
+    $scope.moment = moment;
+
+    $scope.show = function(watch) {
+      $modal.open({
+        templateUrl: 'partials/watch.show.html',
+        scope: $scope,
+        controller: function($scope,$modalInstance) {
+          $scope.checks = new CheckCollection();
+          $scope.watch = watch;
+          $scope.checks.urlRoot = "/rest/watch/" + watch.get("id") + "/lookout"
+          $scope.checks.fetch({remove:true, async:false})
+          $scope.cancel = function() { $modalInstance.dismiss() }
+        }
+      })
+    }
+
 
     $scope.editWatch = function(watch) {
+      console.log(watch)
       var title = "Edit the watch"
       if ( !watch ) {
-        title = "create a new watch"
+        title = "Create a new watch"
         watch = new WatchModel();
       }
       $scope.watch = watch
@@ -160,8 +183,8 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
           $scope.valid = false
 
           $scope.validate = function(){
-            watch.set($scope.watchModel);
-            $http.post("/rest/watch/validate", watch)
+            var tempWatch = new WatchModel($scope.watchModel);
+            $http.post("/rest/watch/validate", tempWatch)
             .success(function(data) {
               $scope.valid = data.valid
               $scope.explanation = ""

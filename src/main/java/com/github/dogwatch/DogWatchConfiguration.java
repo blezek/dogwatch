@@ -36,7 +36,7 @@ public class DogWatchConfiguration extends Configuration implements AssetsBundle
   @Valid
   @NotNull
   @JsonProperty
-  public final EmailConfiguration email = new EmailConfiguration();
+  public EmailConfiguration email = new EmailConfiguration();
 
   @Override
   public AssetsConfiguration getAssetsConfiguration() {

@@ -83,6 +83,7 @@ gulp.task('vendor', function() {
     'bower_components/ember/ember.js',
     'vendor/scripts/console-polyfill.js',
     'bower_components/jquery/dist/jquery.js',
+    'bower_components/momentjs/moment.js'
     ])
   .pipe(uglify({outSourceMap: true}))
   .pipe(gulp.dest('public/js'))
