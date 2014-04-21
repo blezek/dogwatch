@@ -1,7 +1,23 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-md-3">
-      Welcome to DogWatch
+ <nav class="navbar navbar-default" role="navigation">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">DogWatch</a>
+      </div>
+   <div>
+      <ul class="nav navbar-nav">
+        <li><a ui-sref="index.watches">Watches</a></li>
+        <!-- <li>Help</li> -->
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li ng-show="loggedIn"><p class="navbar-text">Signed in as {{data.user.email}}</p></li>
+        <li ng-show="loggedIn"><button type="button" class="btn btn-default navbar-btn" ng-click="logout()">Sign Out</button></li>
+
+        <li ng-hide="loggedIn"><a ui-sref="index.register">Register</a></li>
+        <li ng-hide="loggedIn"><a ui-sref="index.login">Login</a></li>
+      </ul>
     </div>
   </div>
+  </nav>
+
+ <div ui-view></div>
+
 </div>

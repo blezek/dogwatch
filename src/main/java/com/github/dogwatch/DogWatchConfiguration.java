@@ -12,6 +12,7 @@ import com.bazaarvoice.dropwizard.assets.AssetsBundleConfiguration;
 import com.bazaarvoice.dropwizard.assets.AssetsConfiguration;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.dogwatch.configuration.EmailConfiguration;
+import com.github.dogwatch.configuration.ServerConfiguration;
 
 public class DogWatchConfiguration extends Configuration implements AssetsBundleConfiguration {
   @Valid
@@ -37,6 +38,11 @@ public class DogWatchConfiguration extends Configuration implements AssetsBundle
   @NotNull
   @JsonProperty
   public EmailConfiguration email = new EmailConfiguration();
+
+  @Valid
+  @NotNull
+  @JsonProperty
+  public ServerConfiguration dogwatch = new ServerConfiguration();
 
   @Override
   public AssetsConfiguration getAssetsConfiguration() {

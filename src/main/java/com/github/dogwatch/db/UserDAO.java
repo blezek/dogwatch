@@ -1,6 +1,7 @@
 package com.github.dogwatch.db;
 
 import org.apache.shiro.subject.Subject;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 
@@ -13,6 +14,9 @@ public class UserDAO extends SimpleDAO<User> {
   }
 
   public User getFromSubject(Subject subject) {
+    if (subject == null || subject.getPrincipal() == null) {
+      return null;
+    }
     User user = (User) currentSession().createCriteria(User.class).add(Restrictions.eq("email", subject.getPrincipal().toString())).uniqueResult();
     return user;
   }

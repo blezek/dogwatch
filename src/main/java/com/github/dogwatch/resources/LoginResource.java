@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
@@ -21,19 +22,38 @@ import org.apache.shiro.util.ByteSource;
 import org.secnod.shiro.jaxrs.Auth;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.dogwatch.Singletons;
 import com.github.dogwatch.core.Role;
 import com.github.dogwatch.core.User;
-import com.github.dogwatch.db.SimpleDAO;
+import com.github.dogwatch.db.UserDAO;
 
 @Path("/login")
 public class LoginResource {
-  SimpleDAO<User> userDAO;
+  UserDAO userDAO;
   int hashIterations;
 
-  public LoginResource(SimpleDAO<User> userDAO, int hashIterations) {
+  public LoginResource(UserDAO userDAO, int hashIterations) {
     this.userDAO = userDAO;
     this.hashIterations = hashIterations;
+  }
+
+  @GET
+  @UnitOfWork
+  public Response checkLogin(@Auth Subject subject) {
+    User user = userDAO.getFromSubject(subject);
+    ObjectNode json = Singletons.objectMapper.createObjectNode();
+    json.putPOJO("user", user);
+    json.put("host", Singletons.configuration.dogwatch.host);
+    return Response.ok(json).build();
+  }
+
+  @POST
+  @UnitOfWork
+  @Path("/logout")
+  public Response logout(@Auth Subject subject) {
+    subject.logout();
+    return Response.ok().build();
   }
 
   @POST

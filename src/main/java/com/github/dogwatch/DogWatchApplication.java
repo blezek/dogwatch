@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bazaarvoice.dropwizard.assets.ConfiguredAssetsBundle;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.github.dogwatch.bundle.CustomShiroBundle;
 import com.github.dogwatch.core.Heartbeat;
@@ -33,6 +35,8 @@ import com.github.dogwatch.jobs.JobManager;
 import com.github.dogwatch.managed.DBWebServer;
 import com.github.dogwatch.resources.ActivateResource;
 import com.github.dogwatch.resources.LoginResource;
+import com.github.dogwatch.resources.LookoutResource;
+import com.github.dogwatch.resources.RootResource;
 import com.github.dogwatch.resources.WatchResource;
 import com.googlecode.flyway.core.Flyway;
 
@@ -83,13 +87,14 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
   public void initialize(Bootstrap<DogWatchConfiguration> bootstrap) {
     bootstrap.addBundle(hibernate);
     bootstrap.addBundle(shiro);
-    bootstrap.addBundle(new ConfiguredAssetsBundle("/public/", "/dogwatch", "index.html"));
+    bootstrap.addBundle(new ConfiguredAssetsBundle("/public/", "/dogwatch/", "index.html"));
   }
 
   @Override
   public void run(DogWatchConfiguration configuration, Environment environment) throws Exception {
     // Register Joda time
     environment.getObjectMapper().registerModule(new JodaModule());
+    environment.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     // Globals
     Singletons.threadPool = environment.lifecycle().executorService("dogwatch").build();
     Singletons.configuration = configuration;
@@ -119,6 +124,8 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     // Login
     environment.jersey().register(new LoginResource(userDAO, HashIterations));
     environment.jersey().register(new ActivateResource(userDAO));
+    environment.jersey().register(new RootResource());
+    environment.jersey().register(new LookoutResource(watchDAO));
 
   }
 

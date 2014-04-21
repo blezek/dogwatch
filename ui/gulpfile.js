@@ -8,7 +8,6 @@ npm install --save gulp gulp-uglify gulp-concat gulp-notify gulp-cache gulp-live
 var gulp = require('gulp'),
     concat = require('gulp-concat'),
     notify = require('gulp-notify'),
-    cache = require('gulp-cache'),
     refresh = require('gulp-livereload'),
     livereload = require('gulp-livereload'),
     uglify = require('gulp-uglify'),

@@ -28,5 +28,6 @@ public class Heartbeat {
   @Column
   @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
   public DateTime instant;
-
+  public String message = "";
+  public String status = "";
 }
