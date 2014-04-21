@@ -2,6 +2,7 @@ package com.github.dogwatch.db;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.hibernate.Query;
@@ -33,5 +34,16 @@ public class WatchDAO extends SimpleDAO<Watch> {
   public Heartbeat saveHeartbeat(Heartbeat entity) {
     currentSession().saveOrUpdate(checkNotNull(entity));
     return entity;
+  }
+
+  public boolean haveHeartbeat(Watch watch) {
+    String queryString = "select count(*) from Heartbeat where watch_id = :id and instant > :last_check and instant < :next_check";
+
+    Query query = currentSession().createQuery(queryString);
+    query.setLong("id", watch.id);
+    query.setTimestamp("last_check", new Timestamp(watch.last_check.getMillis()));
+    query.setTimestamp("next_check", new Timestamp(watch.next_check.getMillis()));
+    long count = ((Long) query.iterate().next()).longValue();
+    return (count > 0);
   }
 }

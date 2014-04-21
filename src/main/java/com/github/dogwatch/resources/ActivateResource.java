@@ -32,6 +32,7 @@ public class ActivateResource {
       return Response.temporaryRedirect(new URI("/dogwatch/#/hash/error")).build();
     }
     user.activated = true;
+    user.activation_hash = null;
     userDAO.update(user);
     return Response.temporaryRedirect(new URI("/dogwatch/#/hash")).build();
   }

@@ -10,4 +10,8 @@ public class ServerConfiguration {
   @NotNull
   @JsonProperty
   public String host;
+
+  @Valid
+  @JsonProperty
+  public String templatePath;
 }

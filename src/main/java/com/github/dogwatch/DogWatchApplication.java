@@ -1,13 +1,25 @@
 package com.github.dogwatch;
 
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.FileTemplateLoader;
+import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.TemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateExceptionHandler;
+import freemarker.template.Version;
 import io.dropwizard.Application;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.dropwizard.views.View;
+import io.dropwizard.views.ViewBundle;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Locale;
 
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.crypto.hash.Sha512Hash;
@@ -102,6 +114,24 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     Singletons.dataSource = configuration.getDataSourceFactory().build(environment.metrics(), "dogwatch");
     Singletons.jobManager = new JobManager(configuration.getDataSourceFactory());
     Singletons.objectMapper = environment.getObjectMapper();
+    Singletons.sessionFactory = hibernate.getSessionFactory();
+
+    Configuration cfg = new Configuration();
+    // Where do we load the templates from:
+
+    ArrayList<TemplateLoader> loaders = new ArrayList<TemplateLoader>();
+    if (configuration.dogwatch.templatePath != null) {
+      loaders.add(new FileTemplateLoader(new File(configuration.dogwatch.templatePath)));
+    }
+    loaders.add(new ClassTemplateLoader(this.getClass(), "/templates"));
+    cfg.setTemplateLoader(new MultiTemplateLoader(loaders.toArray(new TemplateLoader[] {})));
+
+    // Some other recommended settings:
+    cfg.setIncompatibleImprovements(new Version(2, 3, 20));
+    cfg.setDefaultEncoding("UTF-8");
+    cfg.setLocale(Locale.US);
+    cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+    Singletons.freemarkerConfiguration = cfg;
 
     Flyway flyway = new Flyway();
     flyway.setDataSource(Singletons.dataSource);
@@ -126,7 +156,7 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     environment.jersey().register(new ActivateResource(userDAO));
     environment.jersey().register(new RootResource());
     environment.jersey().register(new LookoutResource(watchDAO));
-
+    ViewBundle v;
   }
 
   public static void main(String[] args) throws Exception {

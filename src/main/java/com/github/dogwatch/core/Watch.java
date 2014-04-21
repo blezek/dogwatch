@@ -89,5 +89,8 @@ public class Watch {
     Trigger trigger = TriggerBuilder.newTrigger().startAt(t.toDate()).forJob(jobBuilder).build();
     scheduler.scheduleJob(jobBuilder, trigger);
     next_check = new DateTime(t.getMillis());
+    if (last_check == null) {
+      last_check = new DateTime();
+    }
   }
 }

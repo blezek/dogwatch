@@ -40,6 +40,8 @@ dependencies {
        'io.dropwizard:dropwizard-jdbi:' + dropwizardVersion,
        'io.dropwizard:dropwizard-migrations:' + dropwizardVersion,
        'io.dropwizard:dropwizard-auth:' + dropwizardVersion,
+       'io.dropwizard:dropwizard-views:' + dropwizardVersion,
+       'io.dropwizard:dropwizard-views-freemarker:' + dropwizardVersion,
        'org.apache.derby:derby:10.10.1.1',
        'com.googlecode.flyway:flyway-core:2.3.1',
        'org.quartz-scheduler:quartz:2.2.1',

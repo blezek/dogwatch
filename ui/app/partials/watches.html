@@ -24,7 +24,7 @@
             <td>{{watch.get('status') ? watch.get("status") : 'none reported'}}</td>
             <td>{{watch.get('cron')}} ({{watch.get("explanation")}})</td>
             <td>{{watch.get('worry')}}</td>
-            <td>{{watch.get('last_check') ? moment(watch.get("last_check")).fromNow() : "never" }}</td>
+            <td>{{moment(watch.get("last_check")).fromNow() }}</td>
             <td>{{moment ( watch.get('next_check') ).fromNow()}}</td>
             <td><i class="fa fa-edit" ng-click="editWatch(watch)"></i></td>
           </tr>

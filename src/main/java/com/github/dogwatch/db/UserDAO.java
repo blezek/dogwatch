@@ -25,4 +25,8 @@ public class UserDAO extends SimpleDAO<User> {
     return (User) currentSession().createCriteria(User.class).add(Restrictions.eq("activation_hash", hash)).uniqueResult();
   }
 
+  public User findByEmail(String email) {
+    return (User) currentSession().createCriteria(User.class).add(Restrictions.eq("email", email)).uniqueResult();
+  }
+
 }

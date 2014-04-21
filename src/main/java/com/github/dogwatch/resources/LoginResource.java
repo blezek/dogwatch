@@ -2,7 +2,10 @@ package com.github.dogwatch.resources;
 
 import io.dropwizard.hibernate.UnitOfWork;
 
+import java.net.URI;
 import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
@@ -107,6 +110,20 @@ public class LoginResource {
     return username;
   }
 
+  @UnitOfWork
+  @POST
+  @Path("/lostpassword")
+  public String lostPassword(@FormParam("email") String email) {
+
+    User user = userDAO.findByEmail(email);
+    if (user == null) {
+      return "Email sent!";
+    }
+    user.activation_hash = UUID.randomUUID().toString();
+    userDAO.update(user);
+    return "Email sent!";
+  }
+
   void sendActivationEmail(final User user) {
     Singletons.threadPool.execute(new Runnable() {
 
@@ -114,8 +131,11 @@ public class LoginResource {
       public void run() {
         try {
           HtmlEmail email = Singletons.newEmail();
+          Map<String, Object> input = new HashMap<String, Object>();
+          input.put("configuration", Singletons.configuration);
+          input.put("user", user);
+          Singletons.renderEmail(email, "activate", input);
           email.setSubject("Welocome to DogWatch");
-          email.setMsg("Click here to activate: http://localhost:8080/dogwatch/activate/" + user.activation_hash + "\nYour friendly dog watch robot!\n");
           email.addTo(user.email);
           email.send();
         } catch (EmailException e) {
