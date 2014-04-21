@@ -30,7 +30,7 @@ email:
   smtpHostname: smtp.googlemail.com
   port: 465
   username: quintherug
-  password: quinthedog
+  password: <CHANGEME>
   ssl: true
 
 logging:
