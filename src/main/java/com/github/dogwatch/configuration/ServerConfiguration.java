@@ -14,4 +14,12 @@ public class ServerConfiguration {
   @Valid
   @JsonProperty
   public String templatePath;
+
+  public String getHost() {
+    return host;
+  }
+
+  public String getTemplatePath() {
+    return templatePath;
+  }
 }

@@ -3,8 +3,7 @@ package com.github.dogwatch.resources;
 import io.dropwizard.hibernate.UnitOfWork;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.Consumes;
@@ -104,25 +103,7 @@ public class WatchResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response validateWatch(Watch watch) {
-    List<String> messages = new ArrayList<String>();
-    SimpleResponse r = new SimpleResponse("explanation", "");
-    r.put("valid", true);
-    if (watch.name == null) {
-      messages.add("Please give your watch a name");
-      r.put("valid", false);
-    }
-    if (watch.worry < 1) {
-      messages.add("Worry time must be greater than 1 minute");
-      r.put("valid", false);
-    }
-    try {
-      new CronExpression(watch.cron);
-      r.put("explanation", CronExpressionDescriptor.getDescription(watch.cron));
-    } catch (ParseException e) {
-      messages.add("Error parsing cron expression at character " + e.getErrorOffset() + " '" + e.getLocalizedMessage() + "'");
-      r.put("valid", false);
-    }
-    r.put("messages", messages);
+    Map<String, Object> r = watch.validate();
     return Response.ok(r).build();
   }
 
@@ -132,6 +113,12 @@ public class WatchResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response createWatch(@Auth Subject subject, Watch watch) {
     User user = userDAO.getFromSubject(subject);
+
+    Map<String, Object> r = watch.validate();
+    boolean valid = (Boolean) r.get("valid");
+    if (!valid) {
+      return Response.serverError().entity(r).build();
+    }
 
     watch.uid = UUID.randomUUID().toString();
     watch.user = user;
@@ -160,10 +147,15 @@ public class WatchResource {
   @Path("/{id: [1-9][0-9]*}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Watch updateWatch(@Auth Subject subject, Watch watch) {
+  public Response updateWatch(@Auth Subject subject, Watch watch) {
     User user = userDAO.getFromSubject(subject);
+    Map<String, Object> r = watch.validate();
+    boolean valid = (Boolean) r.get("valid");
+    if (!valid) {
+      return Response.serverError().entity(r).build();
+    }
     watch.user = user;
-    return watchDAO.update(watch);
+    return Response.ok(watchDAO.update(watch)).build();
   }
 
   @DELETE

@@ -2,8 +2,12 @@ package com.github.dogwatch.core;
 
 import static org.quartz.JobBuilder.newJob;
 
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -19,6 +23,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import net.redhogs.cronparser.CronExpressionDescriptor;
+
 import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 import org.quartz.CronExpression;
@@ -31,6 +37,7 @@ import org.quartz.TriggerBuilder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dogwatch.jobs.LookoutJob;
+import com.github.dogwatch.resources.SimpleResponse;
 
 @Entity
 @Table(name = "watches")
@@ -93,4 +100,28 @@ public class Watch {
       last_check = new DateTime();
     }
   }
+
+  public Map<String, Object> validate() {
+    List<String> messages = new ArrayList<String>();
+    SimpleResponse r = new SimpleResponse("explanation", "");
+    r.put("valid", true);
+    if (name == null) {
+      messages.add("Please give your watch a name");
+      r.put("valid", false);
+    }
+    if (worry < 1) {
+      messages.add("Worry time must be greater than 1 minute");
+      r.put("valid", false);
+    }
+    try {
+      new CronExpression(cron);
+      r.put("explanation", CronExpressionDescriptor.getDescription(cron));
+    } catch (ParseException e) {
+      messages.add("Error parsing cron expression at character " + e.getErrorOffset() + " '" + e.getLocalizedMessage() + "'");
+      r.put("valid", false);
+    }
+    r.put("messages", messages);
+    return r;
+  }
+
 }

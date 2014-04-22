@@ -1,8 +1,9 @@
 package com.github.dogwatch.resources;
 
+import freemarker.ext.beans.BeansWrapper;
+import freemarker.template.TemplateModel;
 import io.dropwizard.hibernate.UnitOfWork;
 
-import java.net.URI;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +16,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -35,6 +35,7 @@ import com.github.dogwatch.db.UserDAO;
 public class LoginResource {
   UserDAO userDAO;
   int hashIterations;
+  Random rng = new SecureRandom();
 
   public LoginResource(UserDAO userDAO, int hashIterations) {
     this.userDAO = userDAO;
@@ -80,11 +81,8 @@ public class LoginResource {
   @POST
   @Path("/register")
   public String register(@FormParam("username") String username, @FormParam("password") String password, @FormParam("remember") Boolean remember, @Auth Subject subject) {
-    UsernamePasswordToken t = new UsernamePasswordToken(username, password);
-
     // Note that a normal app would reference an attribute rather
     // than create a new RNG every time:
-    Random rng = new SecureRandom();
 
     String salt = Long.toString(rng.nextLong());
 
@@ -124,6 +122,43 @@ public class LoginResource {
     return "Email sent!";
   }
 
+  @UnitOfWork
+  @POST
+  @Path("/changepassword")
+  public Response register(@FormParam("hash") String hash, @FormParam("password") String password, @FormParam("password_match") String passwordMatch, @Auth Subject subject) {
+    SimpleResponse r = new SimpleResponse();
+    if (!password.equals(passwordMatch)) {
+      r.put("updated", false);
+      r.put("message", "Passwords do not match");
+      return Response.serverError().entity(r).build();
+    }
+    if (hash == null && subject.isAuthenticated()) {
+      User user = userDAO.getFromSubject(subject);
+
+      user.setPassword(password, hashIterations);
+      user.activated = true;
+      userDAO.update(user);
+      r.put("updated", true);
+      return Response.ok(r).build();
+    }
+    if (hash != null) {
+      User user = userDAO.findByHash(hash);
+      if (user == null) {
+        r.put("updated", false);
+        r.put("message", "Could not find hash");
+        return Response.serverError().entity(r).build();
+      }
+      user.setPassword(password, hashIterations);
+      user.activated = true;
+      userDAO.update(user);
+      r.put("updated", true);
+      return Response.ok(r).build();
+    }
+    r.put("updated", false);
+    r.put("message", "Unable to process");
+    return Response.serverError().entity(r).build();
+  }
+
   void sendActivationEmail(final User user) {
     Singletons.threadPool.execute(new Runnable() {
 
@@ -132,13 +167,15 @@ public class LoginResource {
         try {
           HtmlEmail email = Singletons.newEmail();
           Map<String, Object> input = new HashMap<String, Object>();
+          BeansWrapper.getDefaultInstance().setExposeFields(true);
+          TemplateModel w = BeansWrapper.getDefaultInstance().wrap(Singletons.configuration);
           input.put("configuration", Singletons.configuration);
           input.put("user", user);
           Singletons.renderEmail(email, "activate", input);
           email.setSubject("Welocome to DogWatch");
           email.addTo(user.email);
           email.send();
-        } catch (EmailException e) {
+        } catch (Exception e) {
           LoggerFactory.getLogger(LoginResource.class).error("error sending email", e);
         }
       }

@@ -54,7 +54,7 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
   dogwatchApp = angular.module('dogwatchApp', ['ui.router', 'ui.bootstrap', 'ui.ace']);
 
   dogwatchApp.config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.when('', '/index')
+    $urlRouterProvider.when('', '/index/home')
     $urlRouterProvider.otherwise('/index/home')
     $stateProvider
     .state('index', {
@@ -82,15 +82,25 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
       url: "/register",
       templateUrl: 'partials/register.html',
       controller: 'RegisterController'
-    }).state('hash', {
+    }).state('index.hash', {
       abstract: false,
       url: "/hash",
       templateUrl: 'partials/hash.html',
       controller: 'LoginController'
-    }).state('hasherror', {
+    }).state('index.hasherror', {
       abstract: false,
       url: "/hash/error",
       templateUrl: 'partials/hash.error.html'
+    }).state('index.forgot', {
+      abstract: false,
+      url: "/forgotpassword",
+      templateUrl: 'partials/forgot.html',
+      controller: 'ForgotController'
+    }).state('index.lostpassword', {
+      abstract: false,
+      url: "/lostpassword/:hash",
+      templateUrl: 'partials/lostpassword.html',
+      controller: 'LostPasswordController'
     })
   });
 
@@ -123,6 +133,25 @@ dogwatchApp.controller ( 'LoginController', function($scope,$http,$location) {
   };
 });
 
+dogwatchApp.controller ( 'ForgotController', function($scope,$http,$location) {
+  console.log("Starting Forgot")
+  $scope.reset = function() {
+    console.log ( "Forgot with ", $scope.user)
+    $http(
+      { url:"/login/lostpassword",
+      method: "POST",
+      data: $.param($scope.user),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    })
+      .success(function(data) {
+        $scope.error = data
+    })
+    .error(function(data, status, headers, config) {
+      $scope.error = data.message
+    });
+  };
+});
+
 
 dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) {
   console.log("Starting Register")
@@ -144,6 +173,33 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
     })
       .success(function(data) {
         $location.url('/');
+    })
+    .error(function(data, status, headers, config) {
+      $scope.error = data.message
+    });
+  };
+});
+
+dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$location,$stateParams) {
+  console.log("LostPassword")
+  $scope.error = ""
+
+  $scope.user = { password: null, matchPassword: null, hash: $stateParams.hash }
+  $scope.reset = function() {
+ 
+    console.log ( "Register with ", $scope.user)
+    $http(
+      { url:"/login/changepassword",
+      method: "POST",
+      data: $.param($scope.user),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    })
+      .success(function(data) {
+        if ( data.updated ) {
+          $location.url('/index/login');
+        } else {
+          $scope.error = data.message
+        }
     })
     .error(function(data, status, headers, config) {
       $scope.error = data.message
@@ -259,8 +315,6 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
         if ( data.user ) {
           $scope.loggedIn = true
           $location.url("/watches")        
-        } else {
-          $location.url("/")
         }
       })
     };

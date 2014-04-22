@@ -232,7 +232,7 @@ Your friendly dog watch robot!
                                                             <table border="0" cellpadding="0" cellspacing="0" width="260" class="emailButton">
                                                                 <tr>
                                                                     <td align="center" valign="middle" class="buttonContent">
-                                                                        <a href="http://${configuration.dogwatch.server}/activate/${user.activation_hash}" target="_blank">Activate account</a>
+                                                                        <a href="http://${configuration.dogwatch.host}/activate/${user.activation_hash}" target="_blank">Activate account</a>
                                                                     </td>
                                                                 </tr>
                                                             </table>

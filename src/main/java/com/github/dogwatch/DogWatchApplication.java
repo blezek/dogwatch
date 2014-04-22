@@ -4,6 +4,7 @@ import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.TemplateLoader;
+import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.Version;
@@ -12,7 +13,6 @@ import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import io.dropwizard.views.View;
 import io.dropwizard.views.ViewBundle;
 
 import java.io.File;
@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bazaarvoice.dropwizard.assets.ConfiguredAssetsBundle;
-import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.github.dogwatch.bundle.CustomShiroBundle;
@@ -116,6 +115,8 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     Singletons.objectMapper = environment.getObjectMapper();
     Singletons.sessionFactory = hibernate.getSessionFactory();
 
+    // Freemarker
+    BeansWrapper.getDefaultInstance().setExposeFields(true);
     Configuration cfg = new Configuration();
     // Where do we load the templates from:
 
