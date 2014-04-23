@@ -5,6 +5,28 @@
     For .omb_spanOr use @body-bg instead of white.
 */
 
+
+.wide-dialog .modal-dialog {
+  width: 900px;
+}
+
+.splash-message {
+  background-color: rgba(255, 255, 255, 0.7);
+  margin-top: 250px;
+}
+ .margin-base-vertical {
+            margin: 40px 0;
+        }
+.splash {
+  position: relative;
+  top: 0; right: 0; bottom: 0; left: 0;
+  height:1200px;
+  width:100%;
+  background-image:url("/dogwatch/images/ControlRoom.png");
+  background-repeat:no-repeat;
+  background-size: cover;
+}
+
 @media (min-width: 768px) {
     .omb_row-sm-offset-3 div:first-child[class*="col-"] {
         margin-left: 25%;

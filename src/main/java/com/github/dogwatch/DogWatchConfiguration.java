@@ -15,6 +15,7 @@ import com.github.dogwatch.configuration.EmailConfiguration;
 import com.github.dogwatch.configuration.ServerConfiguration;
 
 public class DogWatchConfiguration extends Configuration implements AssetsBundleConfiguration {
+
   @Valid
   @NotNull
   @JsonProperty

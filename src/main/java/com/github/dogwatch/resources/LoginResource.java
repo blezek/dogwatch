@@ -1,7 +1,5 @@
 package com.github.dogwatch.resources;
 
-import freemarker.ext.beans.BeansWrapper;
-import freemarker.template.TemplateModel;
 import io.dropwizard.hibernate.UnitOfWork;
 
 import java.security.SecureRandom;
@@ -23,6 +21,7 @@ import org.apache.shiro.crypto.hash.Sha512Hash;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ByteSource;
 import org.secnod.shiro.jaxrs.Auth;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,6 +32,7 @@ import com.github.dogwatch.db.UserDAO;
 
 @Path("/login")
 public class LoginResource {
+  static Logger logger = LoggerFactory.getLogger(LoginResource.class);
   UserDAO userDAO;
   int hashIterations;
   Random rng = new SecureRandom();
@@ -80,7 +80,7 @@ public class LoginResource {
   @UnitOfWork
   @POST
   @Path("/register")
-  public String register(@FormParam("username") String username, @FormParam("password") String password, @FormParam("remember") Boolean remember, @Auth Subject subject) {
+  public String register(@FormParam("username") String username, @FormParam("password") String password, @Auth Subject subject) {
     // Note that a normal app would reference an attribute rather
     // than create a new RNG every time:
 
@@ -105,6 +105,13 @@ public class LoginResource {
     user.roles.add(role);
     user = userDAO.create(user);
     sendActivationEmail(user);
+    userDAO.commit();
+    try {
+      subject.login(new UsernamePasswordToken(username, password));
+    } catch (AuthenticationException e) {
+      logger.error("Error loggin in", e);
+    }
+
     return username;
   }
 

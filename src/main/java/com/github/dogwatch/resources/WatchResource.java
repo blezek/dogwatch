@@ -14,14 +14,18 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import net.redhogs.cronparser.CronExpressionDescriptor;
 
+import org.apache.shiro.authz.annotation.RequiresUser;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
 import org.quartz.CronExpression;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -73,8 +77,8 @@ public class WatchResource {
   }
 
   // Make this an admin resource
-  @Path("/scheduled")
   @GET
+  @Path("/scheduled")
   @UnitOfWork
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -86,8 +90,11 @@ public class WatchResource {
     for (JobKey jobKey : scheduler.getJobKeys(GroupMatcher.anyJobGroup())) {
       JobDetail detail = scheduler.getJobDetail(jobKey);
       ObjectNode job = jobs.addObject();
-      job.put("name", detail.getKey().getName());
-      job.put("group", detail.getKey().getGroup());
+
+      job.put("key", detail.getKey().toString());
+      JobDataMap map = detail.getJobDataMap();
+      job.put("name", map.containsKey("name") ? map.getString("name") : "unknown");
+      job.put("email", map.containsKey("email") ? map.getString("email") : "unknown");
       // List<Trigger> triggerList = (List<Trigger>) ;
       ArrayNode triggers = job.putArray("triggers");
       for (Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {
@@ -108,6 +115,7 @@ public class WatchResource {
   }
 
   @POST
+  @RequiresUser
   @UnitOfWork
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -131,7 +139,7 @@ public class WatchResource {
       expression = new CronExpression(watch.cron);
       watch.explanation = CronExpressionDescriptor.getDescription(watch.cron);
       watch = watchDAO.create(watch);
-      watch.scheduleCheck(scheduler, expression);
+      watch.scheduleCheck(scheduler);
       watch = watchDAO.update(watch);
     } catch (ParseException e) {
       return Response.serverError().entity("Error parsing cron expression at character " + e.getErrorOffset() + " '" + e.getLocalizedMessage() + "'").build();
@@ -143,22 +151,32 @@ public class WatchResource {
   }
 
   @PUT
+  @RequiresUser
   @UnitOfWork
   @Path("/{id: [1-9][0-9]*}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response updateWatch(@Auth Subject subject, Watch watch) {
+  public Response updateWatch(@Auth Subject subject, Watch watchUpdate, @PathParam("id") Long id) {
     User user = userDAO.getFromSubject(subject);
+    if (user == null) {
+      return Response.serverError().build();
+    }
+    Watch watch = watchDAO.findById(id).get();
+    if (watch == null) {
+      return Response.status(Status.NOT_FOUND).build();
+    }
+    watch.update(watchUpdate);
+
     Map<String, Object> r = watch.validate();
     boolean valid = (Boolean) r.get("valid");
     if (!valid) {
       return Response.serverError().entity(r).build();
     }
-    watch.user = user;
+
     try {
       CronExpression expression = new CronExpression(watch.cron);
       watch.explanation = CronExpressionDescriptor.getDescription(watch.cron);
-      watch.scheduleCheck(scheduler, expression);
+      watch.scheduleCheck(scheduler);
     } catch (ParseException e) {
       return Response.serverError().entity("Error parsing cron expression at character " + e.getErrorOffset() + " '" + e.getLocalizedMessage() + "'").build();
     } catch (Exception e) {
@@ -169,6 +187,7 @@ public class WatchResource {
   }
 
   @DELETE
+  @RequiresUser
   @Path("/{id: [1-9][0-9]*}")
   @UnitOfWork
   @Produces(MediaType.APPLICATION_JSON)
@@ -186,9 +205,10 @@ public class WatchResource {
   }
 
   // Lookouts
-  @UnitOfWork
   @GET
   @Path("/{id: [1-9][0-9]*}/lookout")
+  @RequiresUser
+  @UnitOfWork
   @Produces(MediaType.APPLICATION_JSON)
   public Response getLookouts(@Auth Subject subject, @PathParam("id") long id) {
     User user = userDAO.getFromSubject(subject);
@@ -201,5 +221,24 @@ public class WatchResource {
     } else {
       return Response.serverError().entity(new SimpleResponse("message", "unknown watch")).build();
     }
+  }
+
+  @GET
+  @RequiresUser
+  @Path("/tz")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getTZ(@QueryParam("timezone") String timezone) {
+    if (timezone == null) {
+      timezone = "";
+    }
+    timezone = "(.*)" + timezone.toLowerCase() + "(.*)";
+    ObjectNode json = Singletons.objectMapper.createObjectNode();
+    ArrayNode timezones = json.putArray("timezones");
+    for (String tz : Singletons.Timezones) {
+      if (tz.toLowerCase().matches(timezone)) {
+        timezones.add(tz);
+      }
+    }
+    return Response.ok(json).build();
   }
 }

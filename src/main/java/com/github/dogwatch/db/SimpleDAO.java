@@ -36,4 +36,10 @@ public class SimpleDAO<T> extends AbstractDAO<T> {
   public void delete(Watch watch) {
     currentSession().delete(watch);
   }
+
+  public void commit() {
+    if (currentSession().getTransaction() != null && currentSession().getTransaction().isActive()) {
+      currentSession().getTransaction().commit();
+    }
+  }
 }

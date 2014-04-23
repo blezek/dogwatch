@@ -1,10 +1,10 @@
 {
-  "name": "Notion",
+  "name": "dogwatch",
   "version": "1.0.0",
   "authors": [
-    "Daniel Blezek <blezek.daniel@mayo.edu>"
+    "Daniel Blezek <daniel.blezek@gmail.com>"
   ],
-  "description": "Research PACS",
+  "description": "Dogwatch keeps tabs on your scheduled background jobs so you don't have to.",
   "license": "BSD",
   "ignore": [
     "**/.*",

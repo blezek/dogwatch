@@ -12,6 +12,7 @@ import freemarker.template.Version;
 import io.dropwizard.Application;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
+import io.dropwizard.migrations.MigrationsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
@@ -33,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import com.bazaarvoice.dropwizard.assets.ConfiguredAssetsBundle;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.github.dogwatch.bundle.CustomShiroBundle;
 import com.github.dogwatch.core.Heartbeat;
@@ -50,11 +50,18 @@ import com.github.dogwatch.resources.LoginResource;
 import com.github.dogwatch.resources.LookoutResource;
 import com.github.dogwatch.resources.RootResource;
 import com.github.dogwatch.resources.WatchResource;
-import com.googlecode.flyway.core.Flyway;
 
 public class DogWatchApplication extends Application<DogWatchConfiguration> {
   static Logger logger = LoggerFactory.getLogger(DogWatchApplication.class);
   static int HashIterations = 100;
+
+  private final MigrationsBundle<DogWatchConfiguration> migration = new MigrationsBundle<DogWatchConfiguration>() {
+
+    @Override
+    public DataSourceFactory getDataSourceFactory(DogWatchConfiguration configuration) {
+      return configuration.getDataSourceFactory();
+    }
+  };
 
   private final HibernateBundle<DogWatchConfiguration> hibernate = new HibernateBundle<DogWatchConfiguration>(Watch.class, User.class, Role.class, Heartbeat.class) {
     @Override
@@ -100,10 +107,12 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     bootstrap.addBundle(hibernate);
     bootstrap.addBundle(shiro);
     bootstrap.addBundle(new ConfiguredAssetsBundle("/public/", "/dogwatch/", "index.html"));
+    bootstrap.addBundle(migration);
   }
 
   @Override
   public void run(DogWatchConfiguration configuration, Environment environment) throws Exception {
+
     // Register Joda time
     environment.getObjectMapper().registerModule(new JodaModule());
     environment.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -111,10 +120,10 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     Singletons.threadPool = environment.lifecycle().executorService("dogwatch").build();
     Singletons.configuration = configuration;
     Singletons.environment = environment;
-    Singletons.dataSource = configuration.getDataSourceFactory().build(environment.metrics(), "dogwatch");
     Singletons.jobManager = new JobManager(configuration.getDataSourceFactory());
     Singletons.objectMapper = environment.getObjectMapper();
     Singletons.sessionFactory = hibernate.getSessionFactory();
+    Singletons.dataSource = configuration.getDataSourceFactory().build(environment.metrics(), "dogwatch");
 
     // Freemarker
     BeansWrapper.getDefaultInstance().setExposeFields(true);
@@ -139,10 +148,6 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
     Singletons.freemarkerConfiguration = cfg;
 
-    Flyway flyway = new Flyway();
-    flyway.setDataSource(Singletons.dataSource);
-    flyway.migrate();
-
     environment.servlets().setSessionHandler(new SessionHandler());
 
     if (configuration.dbWeb != null) {
@@ -162,11 +167,6 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     environment.jersey().register(new ActivateResource(userDAO));
     environment.jersey().register(new RootResource());
     environment.jersey().register(new LookoutResource(watchDAO));
-  }
-
-  public static void main(String[] args) throws Exception {
-    System.setProperty("java.awt.headless", "true");
-    new DogWatchApplication().run(args);
   }
 
 }

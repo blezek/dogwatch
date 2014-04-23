@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dogwatch.Singletons;
 import com.github.dogwatch.jobs.LookoutJob;
 import com.github.dogwatch.resources.SimpleResponse;
 
@@ -54,6 +56,7 @@ public class Watch {
   public String name;
   public String uid;
   public String cron;
+  public String timezone;
   public String explanation;
   public String status;
   public String description;
@@ -81,7 +84,9 @@ public class Watch {
   @ManyToOne
   public User user;
 
-  public void scheduleCheck(Scheduler scheduler, CronExpression expression) throws Exception {
+  public void scheduleCheck(Scheduler scheduler) throws Exception {
+    CronExpression expression = new CronExpression(cron);
+    expression.setTimeZone(TimeZone.getTimeZone(timezone));
     // First cancel any possible pending checks
     JobKey jobKey = new JobKey(Long.toString(id), "lookout");
     if (scheduler.checkExists(jobKey)) {
@@ -90,6 +95,8 @@ public class Watch {
     // Create a map for this job
     JobDataMap jobData = new JobDataMap();
     jobData.put("id", id);
+    jobData.put("name", name);
+    jobData.put("email", user.email);
     JobDetail jobBuilder = newJob(LookoutJob.class).withIdentity(jobKey).usingJobData(jobData).build();
     Date triggerStartTime;
     triggerStartTime = expression.getNextValidTimeAfter(new Date());
@@ -114,6 +121,10 @@ public class Watch {
       messages.add("Worry time must be greater than 1 minute");
       r.put("valid", false);
     }
+    if (!Singletons.Timezones.contains(timezone)) {
+      messages.add("Could not find timezone " + timezone);
+      r.put("valid", false);
+    }
     try {
       new CronExpression(cron);
       r.put("explanation", CronExpressionDescriptor.getDescription(cron));
@@ -123,6 +134,13 @@ public class Watch {
     }
     r.put("messages", messages);
     return r;
+  }
+
+  public void update(Watch update) {
+    name = update.name;
+    cron = update.cron;
+    description = update.description;
+    worry = update.worry;
   }
 
 }

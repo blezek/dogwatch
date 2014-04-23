@@ -36,7 +36,8 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
       worry: 10,
       cron: "0 0 * * * ?",
       show: false,
-      checks: null
+      checks: null,
+      timezone: "US/Central"
     }
   });
 
@@ -54,8 +55,8 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
   dogwatchApp = angular.module('dogwatchApp', ['ui.router', 'ui.bootstrap', 'ui.ace']);
 
   dogwatchApp.config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.when('', '/index/home')
-    $urlRouterProvider.otherwise('/index/home')
+    $urlRouterProvider.when('', '/index/home/login')
+    $urlRouterProvider.otherwise('/index/home/login')
     $stateProvider
     .state('index', {
       abstract: false,
@@ -67,6 +68,10 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
       url: "/home",
       templateUrl: 'partials/dogwatch.index.html',
       controller: 'DogwatchController'
+    }).state('index.index.login', {
+      url: "/login",
+      templateUrl: 'partials/login.html',
+      controller: 'LoginController'
     })
     .state('index.watches', {
       url: "/watches",
@@ -170,11 +175,11 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
       method: "POST",
       data: $.param($scope.user),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-    })
-      .success(function(data) {
-        $location.url('/');
-    })
-    .error(function(data, status, headers, config) {
+    }).success(function(data, status, headers, config) {
+      console.log(data)
+      $location.url('/');
+      $scope.$parent.checkLogin();
+    }).error(function(data, status, headers, config) {
       $scope.error = data.message
     });
   };
@@ -214,10 +219,21 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
     $scope.watches = new WatchCollection();
     $scope.watches.fetch({remove:true,async:false})
     $scope.moment = moment;
+    $scope.humanize = true;
     $scope.$parent.checkLogin();
 
+    $scope.dtime = function(time, otherwise) {
+      if ( time == null ) { return otherwise; }
+      if ( $scope.humanize ) {
+        return moment(time).fromNow();
+      } else {
+        return moment(time).format('llll');
+      }
+      return otherwise;
+    }
+
+
     $scope.status = function(watch) {
-      console.log("status is ", watch.get('next_check'))
       if ( !watch.get('next_check') ) {
         return "danger";
       }
@@ -230,10 +246,25 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
     }
 
     $scope.reload = function(){
-      $scope.watches.fetch({ success: function() {
-        $scope.$apply();
-      }});
+      $scope.watches.fetch({
+         success: function() {
+           $scope.$apply();
+           $scope.watches.models.forEach ( function(element,index,array) {
+              if ( element.get('show') ) {
+                console.log("Reloading", element)
+                $scope.reloadChecks(element)
+              }
+           });
+           $timeout($scope.reload, 60*1000);
+         },
+         error: function(model, response, options) {
+           console.log("Could not get check data")
+           // alert("Failed to retrieve data from server");
+         }
+       });
     };
+
+    $scope.reload();
 
     $scope.show = function(watch) {
       watch.set("show", !watch.get("show"))
@@ -253,6 +284,10 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
         success: function(data) {
           console.log("Got the checks for ", watch)
           $scope.$apply()
+        },
+        error: function(model, response, options) {
+          console.log("Could not get check data")
+          alert("Failed to retrieve data from server");
         }
       });
 
@@ -263,6 +298,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
       $modal.open({
         templateUrl: 'partials/watch.help.html',
         scope: $scope,
+        windowClass: 'wide-dialog',
         controller: function($scope,$modalInstance) {
           $scope.checks = new CheckCollection();
           $scope.watch = watch;
@@ -283,7 +319,13 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
             $scope.watches.remove(watch);
             $scope.watch.urlRoot = "/rest/watch/";
             $scope.watch.destroy();
-            $scope.watches.fetch({ success: function() { $scope.$apply(); }});
+            $scope.watches.fetch({
+               success: function() { $scope.$apply(); },
+               error: function(model, response, options) {
+                 console.log("Could not get check data")
+                 alert("Failed to retrieve data from server");
+               }
+             });
             $modalInstance.dismiss();
             $scope.reload();
           }
@@ -311,6 +353,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
 
           $scope.validate = function(){
             var tempWatch = new WatchModel($scope.watchModel);
+            console.log("validate", tempWatch)
             $http.post("/rest/watch/validate", tempWatch)
             .success(function(data) {
               $scope.valid = data.valid
@@ -322,14 +365,30 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
             });
           }
 
+          $scope.getTimezone = function(val) {
+            return $http.get("/rest/watch/tz", {
+              params: {
+                timezone: val
+              }
+            }).then(function(res) {
+              return res.data.timezones;
+            });
+          }
 
           $scope.save = function(){
             watch.set ( $scope.watchModel )
             // Add emails!
             $scope.watches.add(watch)
-            watch.save();
+            watch.save({
+              success: function() {
+                $scope.reload();
+              },
+              error: function(model, response, options) {
+                console.log("Could not get check data")
+                alert("Failed to save watch!");
+              }
+            });
             $modalInstance.close();
-            $scope.reload();
           };
           $scope.cancel = function() { $modalInstance.dismiss() };
           $scope.validate();
@@ -374,6 +433,6 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
   // Here is where the fun happens. angularAMD contains support for initializing an angular
   // app after the page load.
   angularAMD.bootstrap(dogwatchApp);
-
+  $state.transitionTo('index.index.login')
   console.log ("Build dogwatch app")
 })

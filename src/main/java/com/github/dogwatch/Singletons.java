@@ -7,7 +7,11 @@ import io.dropwizard.setup.Environment;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 
 import javax.sql.DataSource;
@@ -33,6 +37,8 @@ public class Singletons {
   public static ObjectMapper objectMapper;
   public static Configuration freemarkerConfiguration;
   public static SessionFactory sessionFactory;
+
+  public static final Set<String> Timezones = new HashSet<String>(Arrays.asList(TimeZone.getAvailableIDs()));
 
   public static HtmlEmail newEmail() throws EmailException {
     HtmlEmail email = new ImageHtmlEmail();

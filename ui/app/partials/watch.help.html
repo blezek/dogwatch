@@ -1,10 +1,10 @@
-<div class="modal-header">{{watch.get('name')}}</div>
+<div class="modal-header">Help for {{watch.get('name')}}</div>
 
 <div class="modal-body">
 
 <div class="panel panel-default">
   <div class="panel-body">
-    To checkin for this watch, hit this URL:
+    To checkin for {{watch.get('name')}}, hit this URL:
     <pre><code class="javascript">curl http://{{$parent.data.host}}/lookout/{{watch.get("uid")}}</code></pre>
     To include a message, add a query parameter:
     <pre><code class="javascript">curl http://{{$parent.data.host}}/lookout/{{watch.get("uid")}}?m=Got%20it</code></pre>

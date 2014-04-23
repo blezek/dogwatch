@@ -26,7 +26,7 @@ gulp.task("build", ['ace', 'assets', 'vendor', 'app', 'style', 'bootstrap'], fun
 
 gulp.task("watch", ['lr-server', 'build'], function() {
   console.log("\nStarting webserver and watching files\n")
-  gulp.watch ( ['app/*.js', 'app/partials/**', 'app/*.html'], ['app'])
+  gulp.watch ( ['app/*.js', 'app/partials/**', 'app/*.html', 'app/assets/css/*.css'], ['style', 'app'])
 })
 
 // Handlebars / ember / all the rest
@@ -38,6 +38,9 @@ gulp.task('app', function() {
 
   gulp.src('app/*.html')
   .pipe(gulp.dest('public/'));
+
+  gulp.src('app/images/*')
+  .pipe(gulp.dest('public/images'));
 
   // Copy partials
   gulp.src('app/partials/**')
@@ -55,15 +58,13 @@ gulp.task('style', function() {
     ])
 //  .pipe(styl({compress : true }))
 //  .pipe(stylus)
-  .pipe(gulp.dest('public/css'))
+  .pipe(gulp.dest('public/css')).pipe(refresh(server));
 })
 
 
 // Vended source
 gulp.task('vendor', function() {
   gulp.src([
-    'vendor/scripts/moment.js',
-    'vendor/scripts/showdown.js',
     'bower_components/jquery/jquery.js',
     'bower_components/angular-ui-ace/ui-ace.js',
     'bower_components/angular-ui-bootstrap-bower/ui-bootstrap-tpls.js',
@@ -82,7 +83,8 @@ gulp.task('vendor', function() {
     'bower_components/ember/ember.js',
     'vendor/scripts/console-polyfill.js',
     'bower_components/jquery/dist/jquery.js',
-    'bower_components/momentjs/moment.js'
+    'bower_components/momentjs/moment.js',
+    'bower_components/jstz-detect/jstz.js'
     ])
   .pipe(uglify({outSourceMap: true}))
   .pipe(gulp.dest('public/js'))

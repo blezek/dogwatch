@@ -14,6 +14,11 @@
     </div>
 
     <div class="form-group">
+      <label for="formname" class="control-label">TimeZone:</label>
+      <input type="text" ng-model="watchModel.timezone" placeholder="Timezone" typeahead="timezone for timezone in getTimezone($viewValue) | filter:$viewValue" typeahead-loading="loadingLocations" class="form-control">
+    </div>
+
+    <div class="form-group">
       <label for="formname" class="control-label">Worry after(minutes):</label>
       <input type="text" placeholder="60" id="formname" ng-model="watchModel.worry" class="form-control" ng-change="validate()"></input>
     </div>
