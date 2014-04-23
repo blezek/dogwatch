@@ -66,7 +66,7 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
     .state('index.index', {
       url: "/home",
       templateUrl: 'partials/dogwatch.index.html',
-      controller: 'WatchController'
+      controller: 'DogwatchController'
     })
     .state('index.watches', {
       url: "/watches",
@@ -214,6 +214,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
     $scope.watches = new WatchCollection();
     $scope.watches.fetch({remove:true,async:false})
     $scope.moment = moment;
+    $scope.$parent.checkLogin();
 
     $scope.show = function(watch) {
       watch.set("show", !watch.get("show"))
@@ -238,6 +239,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
 
     };
 
+
     $scope.help = function(watch) {
       $modal.open({
         templateUrl: 'partials/watch.help.html',
@@ -247,6 +249,24 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
           $scope.watch = watch;
           $scope.checks.urlRoot = "/rest/watch/" + watch.get("id") + "/lookout"
           $scope.checks.fetch({remove:true, async:false})
+          $scope.cancel = function() { $modalInstance.dismiss() }
+        }
+      })
+    }
+
+    $scope.delete = function(watch) {
+      $modal.open({
+        templateUrl: 'partials/watch.delete.html',
+        scope: $scope,
+        controller: function($scope,$modalInstance) {
+          $scope.watch = watch;
+          $scope.delete = function() {
+            $scope.watches.remove(watch);
+            $scope.watch.urlRoot = "/rest/watch/";
+            $scope.watch.destroy();
+            $scope.watches.fetch({ success: function() { $scope.$apply(); }});
+            $modalInstance.dismiss();
+          }
           $scope.cancel = function() { $modalInstance.dismiss() }
         }
       })
@@ -306,15 +326,23 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
         $scope.checkLogin()
       });
     };
-    $scope.checkLogin = function() {
+
+
+    $scope.checkLogin = function( goto ) {
+      console.log("Checking if we are logged in")
       $http.get("/login").success(function(data){
         console.log("Login info", data)
         $scope.data = data
         $scope.loggedIn = false
         // Logged in?
         if ( data.user ) {
+          console.log("User: ", data.user)
           $scope.loggedIn = true
-          $location.url("/watches")        
+          if ( goto ) {
+            $location.url(goto)        
+          }
+        } else {
+          $location.url("/home")
         }
       })
     };

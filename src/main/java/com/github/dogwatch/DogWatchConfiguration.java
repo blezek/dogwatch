@@ -52,5 +52,8 @@ public class DogWatchConfiguration extends Configuration implements AssetsBundle
   public DataSourceFactory getDataSourceFactory() {
     return database;
   }
-
+  //
+  // public ServerConfiguration getDogwatch() {
+  // return dogwatch;
+  // }
 }

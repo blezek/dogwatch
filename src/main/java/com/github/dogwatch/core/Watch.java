@@ -54,6 +54,7 @@ public class Watch {
   public String explanation;
   public String status;
   public String description;
+  public int consecutive_failed_checks;
   public int worry;
   public boolean active;
 

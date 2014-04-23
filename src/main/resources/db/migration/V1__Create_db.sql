@@ -13,6 +13,7 @@ create table watches (
   worry int,
   status varchar(32),
   active boolean,
+  consecutive_failed_checks int DEFAULT 0,
   last_check TIMESTAMP,
   next_check TIMESTAMP,
   CONSTRAINT watches_uid UNIQUE ( uid )

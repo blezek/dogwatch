@@ -21,12 +21,12 @@
           <tr ng-repeat-start="watch in watches.models | orderBy:'id'" >
             <td><i class="fa fa-th-list" ng-click="show(watch)"></i></td>
             <td ng-click="help(watch)">{{watch.get('name')}} <i class="fa fa-question"></i></td>
-            <td>{{watch.get('status') ? watch.get("status") : 'none reported'}}</td>
+            <td>{{watch.get('status') ? watch.get("status") : 'none reported'}} {{watch.get('consecutive_failed_checks')}} failed checks</td>
             <td>{{watch.get('cron')}} ({{watch.get("explanation")}})</td>
             <td>{{watch.get('worry')}}</td>
             <td>{{moment(watch.get("last_check")).fromNow() }}</td>
             <td>{{moment ( watch.get('next_check') ).fromNow()}}</td>
-            <td><i class="fa fa-edit" ng-click="editWatch(watch)"></i></td>
+            <td><i class="fa fa-edit" ng-click="editWatch(watch)"></i> <i class="fa fa-times-circle" ng-click="delete(watch)"></i></td>
           </tr>
           <tr ng-repeat-end="" ng-show="watch.get('show')">
             <td></td>

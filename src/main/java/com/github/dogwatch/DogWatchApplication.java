@@ -6,6 +6,7 @@ import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.Version;
 import io.dropwizard.Application;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.bazaarvoice.dropwizard.assets.ConfiguredAssetsBundle;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.github.dogwatch.bundle.CustomShiroBundle;
 import com.github.dogwatch.core.Heartbeat;
@@ -131,6 +133,10 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     cfg.setIncompatibleImprovements(new Version(2, 3, 20));
     cfg.setDefaultEncoding("UTF-8");
     cfg.setLocale(Locale.US);
+    DefaultObjectWrapper ow = new DefaultObjectWrapper();
+    ow.setExposeFields(true);
+    ow.setExposureLevel(BeansWrapper.EXPOSE_SAFE);
+    cfg.setObjectWrapper(ow);
     cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
     Singletons.freemarkerConfiguration = cfg;
 

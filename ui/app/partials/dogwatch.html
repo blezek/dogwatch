@@ -12,7 +12,7 @@
           </div>
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-              <li><a ui-sref="index.watches">Watches</a></li>
+              <li><a ng-show="loggedIn" ui-sref="index.watches">Watches</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
         <li ng-show="loggedIn"><p class="navbar-text">Signed in as {{data.user.email}}</p></li>

@@ -155,14 +155,30 @@ public class WatchResource {
       return Response.serverError().entity(r).build();
     }
     watch.user = user;
+    try {
+      CronExpression expression = new CronExpression(watch.cron);
+      watch.scheduleCheck(scheduler, expression);
+    } catch (ParseException e) {
+      return Response.serverError().entity("Error parsing cron expression at character " + e.getErrorOffset() + " '" + e.getLocalizedMessage() + "'").build();
+    } catch (Exception e) {
+      return Response.serverError().entity("Error scheduling check '" + e.getLocalizedMessage() + "'").build();
+    }
     return Response.ok(watchDAO.update(watch)).build();
   }
 
   @DELETE
+  @Path("/{id: [1-9][0-9]*}")
   @UnitOfWork
-  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response deleteWatch(@Auth Subject subject, Watch watch) {
+  public Response deleteWatch(@Auth Subject subject, @PathParam("id") long id) {
+    User user = userDAO.getFromSubject(subject);
+    Watch watch = watchDAO.findById(id).get();
+    if (watch == null) {
+      return Response.serverError().entity(new SimpleResponse("message", "unknown watch")).build();
+    }
+    if (watch.user.id != user.id) {
+      return Response.serverError().entity(new SimpleResponse("message", "unknown watch")).build();
+    }
     watchDAO.delete(watch);
     return Response.ok().build();
   }
@@ -172,7 +188,7 @@ public class WatchResource {
   @GET
   @Path("/{id: [1-9][0-9]*}/lookout")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response deleteWatch(@Auth Subject subject, @PathParam("id") long id) {
+  public Response getLookouts(@Auth Subject subject, @PathParam("id") long id) {
     User user = userDAO.getFromSubject(subject);
     Optional<Watch> watch = watchDAO.findById(id);
     if (!watch.isPresent()) {

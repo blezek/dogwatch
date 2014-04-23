@@ -111,14 +111,32 @@ public class LoginResource {
   @UnitOfWork
   @POST
   @Path("/lostpassword")
-  public String lostPassword(@FormParam("email") String email) {
+  public String lostPassword(@FormParam("username") String email) {
 
-    User user = userDAO.findByEmail(email);
+    final User user = userDAO.findByEmail(email);
     if (user == null) {
       return "Email sent!";
     }
     user.activation_hash = UUID.randomUUID().toString();
     userDAO.update(user);
+    Singletons.threadPool.execute(new Runnable() {
+
+      @Override
+      public void run() {
+        try {
+          HtmlEmail email = Singletons.newEmail();
+          Map<String, Object> input = new HashMap<String, Object>();
+          input.put("configuration", Singletons.configuration);
+          input.put("user", user);
+          Singletons.renderEmail(email, "forgot", input);
+          email.setSubject("Forgotten password for Dogwatch");
+          email.addTo(user.email);
+          email.send();
+        } catch (Exception e) {
+          LoggerFactory.getLogger(LoginResource.class).error("error sending email", e);
+        }
+      }
+    });
     return "Email sent!";
   }
 
@@ -167,12 +185,10 @@ public class LoginResource {
         try {
           HtmlEmail email = Singletons.newEmail();
           Map<String, Object> input = new HashMap<String, Object>();
-          BeansWrapper.getDefaultInstance().setExposeFields(true);
-          TemplateModel w = BeansWrapper.getDefaultInstance().wrap(Singletons.configuration);
           input.put("configuration", Singletons.configuration);
           input.put("user", user);
           Singletons.renderEmail(email, "activate", input);
-          email.setSubject("Welocome to DogWatch");
+          email.setSubject("Welcome to DogWatch");
           email.addTo(user.email);
           email.send();
         } catch (Exception e) {
