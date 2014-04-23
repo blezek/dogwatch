@@ -41,7 +41,13 @@ public class WatchDAO extends SimpleDAO<Watch> {
 
     Query query = currentSession().createQuery(queryString);
     query.setLong("id", watch.id);
-    query.setTimestamp("last_check", new Timestamp(watch.last_check.getMillis()));
+
+    Timestamp last = new Timestamp(0);
+    if (watch.last_check != null) {
+      last = new Timestamp(watch.last_check.getMillis());
+    }
+
+    query.setTimestamp("last_check", last);
     query.setTimestamp("next_check", new Timestamp(watch.next_check.getMillis()));
     long count = ((Long) query.iterate().next()).longValue();
     return (count > 0);

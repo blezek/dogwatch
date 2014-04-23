@@ -157,12 +157,14 @@ public class WatchResource {
     watch.user = user;
     try {
       CronExpression expression = new CronExpression(watch.cron);
+      watch.explanation = CronExpressionDescriptor.getDescription(watch.cron);
       watch.scheduleCheck(scheduler, expression);
     } catch (ParseException e) {
       return Response.serverError().entity("Error parsing cron expression at character " + e.getErrorOffset() + " '" + e.getLocalizedMessage() + "'").build();
     } catch (Exception e) {
       return Response.serverError().entity("Error scheduling check '" + e.getLocalizedMessage() + "'").build();
     }
+    watch.consecutive_failed_checks = 0;
     return Response.ok(watchDAO.update(watch)).build();
   }
 

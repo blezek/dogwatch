@@ -34,6 +34,8 @@ import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dogwatch.jobs.LookoutJob;
@@ -42,6 +44,7 @@ import com.github.dogwatch.resources.SimpleResponse;
 @Entity
 @Table(name = "watches")
 public class Watch {
+  static Logger logger = LoggerFactory.getLogger(Watch.class);
 
   @Id
   @Column(name = "id")
@@ -66,6 +69,10 @@ public class Watch {
   @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
   public DateTime next_check;
 
+  @Column
+  @Type(type = "org.jadira.usertype.dateandtime.joda.PersistentDateTime")
+  public DateTime expected;
+
   @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinTable(name = "watch_user", joinColumns = { @JoinColumn(name = "watch_id") }, inverseJoinColumns = { @JoinColumn(name = "user_id") })
   public Set<User> users = new HashSet<User>();
@@ -85,21 +92,14 @@ public class Watch {
     jobData.put("id", id);
     JobDetail jobBuilder = newJob(LookoutJob.class).withIdentity(jobKey).usingJobData(jobData).build();
     Date triggerStartTime;
-    if (last_check != null) {
-      triggerStartTime = expression.getNextValidTimeAfter(last_check.toDate());
-    } else {
-      triggerStartTime = expression.getNextValidTimeAfter(new Date());
-    }
+    triggerStartTime = expression.getNextValidTimeAfter(new Date());
     // Add our watch amount...
-    DateTime t = new DateTime(triggerStartTime.getTime());
-    t.plusMinutes(worry);
-
-    Trigger trigger = TriggerBuilder.newTrigger().startAt(t.toDate()).forJob(jobBuilder).build();
+    expected = new DateTime(triggerStartTime.getTime());
+    next_check = new DateTime(expected.plusMinutes(worry).getMillis());
+    logger.info("Scheduled job for " + name + "(" + id + ") next scheduled time is " + expected + " will begin to worry at " + next_check);
+    Trigger trigger = TriggerBuilder.newTrigger().startAt(expected.toDate()).forJob(jobBuilder).build();
     scheduler.scheduleJob(jobBuilder, trigger);
-    next_check = new DateTime(t.getMillis());
-    if (last_check == null) {
-      last_check = new DateTime();
-    }
+
   }
 
   public Map<String, Object> validate() {

@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
-import org.hibernate.Session;
 import org.quartz.CronExpression;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
@@ -62,8 +61,12 @@ public class LookoutJob extends DogwatchJob {
       watch.consecutive_failed_checks = 0;
     }
     try {
+      watch.last_check = watch.next_check;
       if (watch.consecutive_failed_checks < 10) {
         watch.scheduleCheck(context.getScheduler(), new CronExpression(watch.cron));
+      } else {
+        watch.next_check = null;
+        watch.expected = null;
       }
       watchDAO.update(watch);
     } catch (ParseException e) {

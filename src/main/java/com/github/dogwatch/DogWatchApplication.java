@@ -14,7 +14,6 @@ import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import io.dropwizard.views.ViewBundle;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -163,7 +162,6 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     environment.jersey().register(new ActivateResource(userDAO));
     environment.jersey().register(new RootResource());
     environment.jersey().register(new LookoutResource(watchDAO));
-    ViewBundle v;
   }
 
   public static void main(String[] args) throws Exception {

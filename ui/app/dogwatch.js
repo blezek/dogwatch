@@ -186,7 +186,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
 
   $scope.user = { password: null, matchPassword: null, hash: $stateParams.hash }
   $scope.reset = function() {
- 
+
     console.log ( "Register with ", $scope.user)
     $http(
       { url:"/login/changepassword",
@@ -215,6 +215,25 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
     $scope.watches.fetch({remove:true,async:false})
     $scope.moment = moment;
     $scope.$parent.checkLogin();
+
+    $scope.status = function(watch) {
+      console.log("status is ", watch.get('next_check'))
+      if ( !watch.get('next_check') ) {
+        return "danger";
+      }
+      if ( watch.get('consecutive_failed_checks') > 2 ) {
+        return "info"
+      }
+      if ( watch.get('consecutive_failed_checks') > 5 ) {
+        return "warning"
+      }
+    }
+
+    $scope.reload = function(){
+      $scope.watches.fetch({ success: function() {
+        $scope.$apply();
+      }});
+    };
 
     $scope.show = function(watch) {
       watch.set("show", !watch.get("show"))
@@ -266,6 +285,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
             $scope.watch.destroy();
             $scope.watches.fetch({ success: function() { $scope.$apply(); }});
             $modalInstance.dismiss();
+            $scope.reload();
           }
           $scope.cancel = function() { $modalInstance.dismiss() }
         }
@@ -309,6 +329,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
             $scope.watches.add(watch)
             watch.save();
             $modalInstance.close();
+            $scope.reload();
           };
           $scope.cancel = function() { $modalInstance.dismiss() };
           $scope.validate();
@@ -339,7 +360,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
           console.log("User: ", data.user)
           $scope.loggedIn = true
           if ( goto ) {
-            $location.url(goto)        
+            $location.url(goto)
           }
         } else {
           $location.url("/home")

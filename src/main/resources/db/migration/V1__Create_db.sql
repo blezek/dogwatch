@@ -1,7 +1,20 @@
 --liquidbase farmatted sql
 
 --changeset blezek:1
+create table users (
+  id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email varchar(512) NOT NULL,
+  password varchar(512),
+  salt varchar(64),
+  activated boolean,
+  activation_hash varchar(256),
+  CONSTRAINT users_email UNIQUE ( email )
+  );
 
+  create index users_index_hash on users ( activation_hash );
+  create index users_index_email on users ( email );
+  
+  
 create table watches (
   id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id BIGINT,
@@ -16,16 +29,24 @@ create table watches (
   consecutive_failed_checks int DEFAULT 0,
   last_check TIMESTAMP,
   next_check TIMESTAMP,
-  CONSTRAINT watches_uid UNIQUE ( uid )
+  expected TIMESTAMP,
+  CONSTRAINT watches_uid UNIQUE ( uid ),
+  CONSTRAINT watches_fk_1 FOREIGN KEY ( user_id ) REFERENCES users ( id ) ON DELETE CASCADE
   );
+
+create index watches_index_user_id on watches ( user_id );
+create index watches_index_uid on watches ( uid );
 
 create table heartbeats (
   id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   watch_id BIGINT NOT NULL,
   instant TIMESTAMP,
   message varchar(150),
-  status varchar(16)
+  status varchar(16),
+  CONSTRAINT heartbeats_fk_1 FOREIGN KEY ( watch_id ) REFERENCES watches ( id ) ON DELETE CASCADE
   );
+
+create index heartbeats_index_instant on heartbeats ( watch_id, instant );
 
 create table watch_user (
   id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -33,16 +54,7 @@ create table watch_user (
   user_id BIGINT
   );
 
-create table users (
-  id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  email varchar(512) NOT NULL,
-  password varchar(512),
-  salt varchar(64),
-  activated boolean,
-  activation_hash varchar(256),
-  CONSTRAINT users_email UNIQUE ( email )
-  );
-  
+
 create table user_role (
   id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id BIGINT NOT NULL,
