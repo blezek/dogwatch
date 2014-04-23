@@ -130,7 +130,7 @@ dogwatchApp.controller ( 'LoginController', function($scope,$http,$location) {
     })
       .success(function(data) {
         $scope.$parent.checkLogin()
-        $location.url('/');
+        $state.transitionTo('index.watches')
     })
     .error(function(data, status, headers, config) {
       $scope.error = data.message
@@ -185,7 +185,7 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
   };
 });
 
-dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$location,$stateParams) {
+dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$location,$stateParams,$state) {
   console.log("LostPassword")
   $scope.error = ""
 
@@ -201,7 +201,8 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
     })
       .success(function(data) {
         if ( data.updated ) {
-          $location.url('/index/login');
+          $state.transitionTo('index.watches')
+          // $location.url('/');
         } else {
           $scope.error = data.message
         }
@@ -295,6 +296,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
 
 
     $scope.help = function(watch) {
+      $scope.user = $scope.$parent.user;
       $modal.open({
         templateUrl: 'partials/watch.help.html',
         scope: $scope,
@@ -305,6 +307,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
           $scope.checks.urlRoot = "/rest/watch/" + watch.get("id") + "/lookout"
           $scope.checks.fetch({remove:true, async:false})
           $scope.cancel = function() { $modalInstance.dismiss() }
+          $scope.encode = encodeURIComponent
         }
       })
     }
@@ -398,7 +401,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
 
   });
 
-  dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$location,$http) {
+  dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$location,$http,$state) {
     console.log("Starting DogwatchController")
     // See if we're logged in?
     $scope.logout = function() {
@@ -418,8 +421,13 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
         if ( data.user ) {
           console.log("User: ", data.user)
           $scope.loggedIn = true
+          $scope.user = data.user;
+          console.log("LoginController -- we are logged in")
+
           if ( goto ) {
             $location.url(goto)
+          } else {
+            $state.transitionTo("index.watches");
           }
         } else {
           $location.url("/home")
