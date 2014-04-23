@@ -1,0 +1,40 @@
+<div class="modal-header"><h2 class="text-center">{{watch.get('name')}}</h2></div>
+
+<div class="modal-body">
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <h3 class="text-center">Per-watch lookout</h3>
+Watch lookout code:
+<pre><code class="bash">{{watch.get('uid')}}</code></pre>
+
+    To checkin for {{watch.get('name')}}, hit this URL:
+    <pre><code class="javascript">curl http://{{$parent.data.host}}/lookout/{{watch.get("uid")}}</code></pre>
+    To include a message, add a query parameter:
+    <pre><code class="javascript">curl http://{{$parent.data.host}}/lookout/{{watch.get("uid")}}?m=Got%20it</code></pre>
+    To set status, add an "s" or "status" query parameter:
+    <pre><code class="javascript">curl http://{{$parent.data.host}}/lookout/{{watch.get("uid")}}?s=success</code></pre>
+    Hit the lookout after your cron job is completed:
+    <pre><code class="javascript">doSomeWork &amp;&amp; curl http://{{$parent.data.host}}/lookout/{{watch.get("uid")}}?s=success</code></pre>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <h3 class="text-center">Per-user lookout</h3>
+
+<div class="panel-body">
+User lookout code:
+<pre><code class="bash">{{$parent.user.uid}}</code></pre>
+
+If you prefer to hit watches by name:
+<pre><code class="javascript">curl http://{{$parent.data.host}}/lookout/{{$parent.user.uid}}?watch={{encode(watch.get('name'))}}</code></pre>
+
+Any watch can be referenced by name by name:
+<pre><code class="javascript">curl http://{{$parent.data.host}}/lookout/{{$parent.user.uid}}?watch={{encode(watch.get('name'))}}</code></pre>
+</div>
+
+
+</div>
+<div class="modal-footer">
+  <button class="btn btn-warning" ng-click="cancel()">Done</button>
+</div>

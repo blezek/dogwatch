@@ -1,11 +1,11 @@
--- 
+--
 -- Apache Derby scripts by Steve Stewart, updated by Ronald Pomeroy
 -- Based on Srinivas Venkatarangaiah's file for Cloudscape
--- 
+--
 -- Known to work with Apache Derby 10.0.2.1, or 10.6.2.1
 --
 -- Updated by Zemian Deng <saltnlight5@gmail.com> on 08/21/2011
---   * Fixed nullable fields on qrtz_simprop_triggers table. 
+--   * Fixed nullable fields on qrtz_simprop_triggers table.
 --   * Added Derby QuickStart comments and drop tables statements.
 --
 -- DerbyDB + Quartz Quick Guide:
@@ -25,7 +25,7 @@
 --    org.quartz.dataSource.quartzDataSource.password = quartz2123
 --
 
--- Auto drop and reset tables 
+-- Auto drop and reset tables
 -- Derby doesn't support if exists condition on table drop, so user must manually do this step if needed to.
 -- drop table qrtz_fired_triggers;
 -- drop table qrtz_paused_trigger_grps;
@@ -39,6 +39,9 @@
 -- drop table qrtz_job_details;
 -- drop table qrtz_calendars;
 
+--liquidbase farmatted sql
+
+--changeset blezek:2
 create table qrtz_job_details (
 sched_name varchar(120) not null,
 job_name varchar(200) not null,
@@ -96,7 +99,7 @@ foreign key (sched_name,trigger_name,trigger_group) references qrtz_triggers(sch
 );
 
 create table qrtz_simprop_triggers
-  (          
+  (
     sched_name varchar(120) not null,
     trigger_name varchar(200) not null,
     trigger_group varchar(200) not null,
@@ -112,7 +115,7 @@ create table qrtz_simprop_triggers
     bool_prop_1 varchar(5),
     bool_prop_2 varchar(5),
     primary key (sched_name,trigger_name,trigger_group),
-    foreign key (sched_name,trigger_name,trigger_group) 
+    foreign key (sched_name,trigger_name,trigger_group)
     references qrtz_triggers(sched_name,trigger_name,trigger_group)
 );
 
@@ -171,4 +174,3 @@ create table qrtz_locks
     lock_name varchar(40) not null,
 primary key (sched_name,lock_name)
 );
-

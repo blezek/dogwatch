@@ -1,3 +1,4 @@
+dogwatch.yml
 /bin
 /DB
 .gradle/1.11/taskArtifacts/cache.properties.lock
@@ -10,3 +11,4 @@ derby.log
 ui/bower_components
 ui/node_modules
 ui/public
+build

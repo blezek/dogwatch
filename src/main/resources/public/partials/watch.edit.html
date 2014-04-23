@@ -1,0 +1,40 @@
+<div class="modal-header">{{title}}</div>
+
+<div class="modal-body">
+<form>
+
+    <div class="form-group">
+      <label class="control-label">Name:</label>
+      <input type="text" placeholder="Crow's Nest" class="form-control" ng-change="validate()" ng-model="watchModel.name"></input>
+    </div>
+
+    <div class="form-group">
+      <label for="formname" class="control-label">Cron Expression{{explanation}}:</label>
+      <input type="text" placeholder="0 * * * * *" id="formname" ng-model="watchModel.cron" ng-change="validate()" class="form-control"></input>
+    </div>
+
+    <div class="form-group">
+      <label for="formname" class="control-label">TimeZone:</label>
+      <input type="text" ng-model="watchModel.timezone" placeholder="Timezone" typeahead="timezone for timezone in getTimezone($viewValue) | filter:$viewValue" typeahead-loading="loadingLocations" class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label for="formname" class="control-label">Worry after(minutes):</label>
+      <input type="text" placeholder="60" id="formname" ng-model="watchModel.worry" class="form-control" ng-change="validate()"></input>
+    </div>
+
+  <div class="form-group">
+    <label class="control-label">Description:</label>
+    <textarea class="form-control" ng-model="watchModel.description" ></textArea>
+  </div>
+
+  <div class="form-group">
+    <span class="help-block">{{error}}</span>
+  </div>
+
+</form>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-primary" ng-disabled="!valid" ng-click="save()">Save</button>
+  <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

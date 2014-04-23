@@ -1,11 +1,12 @@
 package com.github.dogwatch.db;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.sql.Timestamp;
 import java.util.List;
 
-import org.apache.shiro.subject.Subject;
-import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 
 import com.github.dogwatch.core.Heartbeat;
 import com.github.dogwatch.core.Watch;
@@ -16,28 +17,39 @@ public class WatchDAO extends SimpleDAO<Watch> {
     super(sessionFactory);
   }
 
-  public List<Watch> findAllForSubject(Subject subject) {
-    Criteria c = currentSession().createCriteria(Watch.class, "w");
-    c.createAlias("w.user", "user");
-    c.add(Restrictions.eq("user.email", subject.getPrincipal()));
-    //
-    // List cats = sess.createCriteria(Cat.class).createAlias("kittens",
-    // "kt").createAlias("mate", "mt").add(Restrictions.eqProperty("kt.name",
-    // "mt.name")).list();
-    //
-    // Criteria c = session.createCriteria(W.class, "dokument");
-    // c.createAlias("dokument.role", "role"); // inner join by default
-    // c.createAlias("role.contact", "contact");
-    // c.add(Restrictions.eq("contact.lastName", "Test"));
-    // return c.list();
-    //
-    // Query qry =
-    // currentSession().createQuery("select v.vendorName, c.customerName from Vendor v Left Join v.children c");
-    return c.list();
+  public Watch getByUID(String uid) {
+    Query query = currentSession().createQuery("from Watch where uid = :uid");
+    query.setString("uid", uid);
+    return (Watch) query.uniqueResult();
   }
 
-  List<Heartbeat> lastHeartbeats(Watch watch, int count) {
-    return null;
+  @SuppressWarnings("unchecked")
+  public List<Heartbeat> lastHeartbeats(Watch watch, int count) {
+    Query query = currentSession().createQuery("from Heartbeat where watch_id = :id order by instant");
+    query.setLong("id", watch.id);
+    query.setMaxResults(count);
+    return (List<Heartbeat>) query.list();
   }
 
+  public Heartbeat saveHeartbeat(Heartbeat entity) {
+    currentSession().saveOrUpdate(checkNotNull(entity));
+    return entity;
+  }
+
+  public boolean haveHeartbeat(Watch watch) {
+    String queryString = "select count(*) from Heartbeat where watch_id = :id and instant > :last_check and instant < :next_check";
+
+    Query query = currentSession().createQuery(queryString);
+    query.setLong("id", watch.id);
+
+    Timestamp last = new Timestamp(0);
+    if (watch.last_check != null) {
+      last = new Timestamp(watch.last_check.getMillis());
+    }
+
+    query.setTimestamp("last_check", last);
+    query.setTimestamp("next_check", new Timestamp(watch.next_check.getMillis()));
+    long count = ((Long) query.iterate().next()).longValue();
+    return (count > 0);
+  }
 }

@@ -11,8 +11,11 @@ import org.secnod.dropwizard.shiro.ShiroConfiguration;
 import com.bazaarvoice.dropwizard.assets.AssetsBundleConfiguration;
 import com.bazaarvoice.dropwizard.assets.AssetsConfiguration;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.dogwatch.configuration.EmailConfiguration;
+import com.github.dogwatch.configuration.ServerConfiguration;
 
 public class DogWatchConfiguration extends Configuration implements AssetsBundleConfiguration {
+
   @Valid
   @NotNull
   @JsonProperty
@@ -32,6 +35,16 @@ public class DogWatchConfiguration extends Configuration implements AssetsBundle
   @JsonProperty
   public String dbWeb = null;
 
+  @Valid
+  @NotNull
+  @JsonProperty
+  public EmailConfiguration email = new EmailConfiguration();
+
+  @Valid
+  @NotNull
+  @JsonProperty
+  public ServerConfiguration dogwatch = new ServerConfiguration();
+
   @Override
   public AssetsConfiguration getAssetsConfiguration() {
     return assets;
@@ -40,5 +53,8 @@ public class DogWatchConfiguration extends Configuration implements AssetsBundle
   public DataSourceFactory getDataSourceFactory() {
     return database;
   }
-
+  //
+  // public ServerConfiguration getDogwatch() {
+  // return dogwatch;
+  // }
 }
