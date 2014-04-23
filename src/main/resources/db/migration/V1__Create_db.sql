@@ -4,6 +4,7 @@
 create table users (
   id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   email varchar(512) NOT NULL,
+  uid varchar(255) NOT NULL,
   password varchar(512),
   salt varchar(64),
   activated boolean,
@@ -13,6 +14,7 @@ create table users (
 
   create index users_index_hash on users ( activation_hash );
   create index users_index_email on users ( email );
+  create index users_index_uid on users ( uid );
   
   
 create table watches (
