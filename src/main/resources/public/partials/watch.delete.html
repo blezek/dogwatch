@@ -1,0 +1,14 @@
+<div class="modal-header">{{title}}</div>
+
+<div class="modal-body">
+<form>
+
+    
+    <span class="help-block">Delete {{watch.get('name')}}?</span>
+
+</form>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-primary" ng-click="delete()">Delete</button>
+  <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

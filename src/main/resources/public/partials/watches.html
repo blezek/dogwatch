@@ -1,0 +1,76 @@
+<div>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-6 panel-title">
+            <i class="fa fa-refresh" ng-click="reload()"></i> Watches <i class="fa fa-plus-circle" ng-click="editWatch(null)"></i>
+          </div>
+          <div class="col-md-6">
+            <span class="pull-right">
+              <label><input ng-model="humanize" type="checkbox" value="remember-me"> Humanize timestamps</label>
+            </span>
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>
+    <div class="panel-body">
+     <table class="table table-striped table-hover table-condensed">
+        <thead>
+          <tr>
+            <td></td>
+            <td>Name</td>
+            <td>Status</td>
+            <td>Cron</td>
+            <td>Worry Time</td>
+            <td>Last Check</td>
+            <td>Expected</td>
+            <td>Next Check</td>
+            <td></td>
+        </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat-start="watch in watches.models | orderBy:'id'" ng-class="status(watch)">
+            <td><i class="fa fa-th-list" ng-click="show(watch)"></i></td>
+            <td ng-click="help(watch)">{{watch.get('name')}} <i class="fa fa-question"></i></td>
+            <td>{{watch.get('status') ? watch.get("status") : 'none reported'}} ({{watch.get('consecutive_failed_checks')}} missed lookouts)</td>
+            <td>{{watch.get('cron')}} ({{watch.get("explanation")}})</td>
+            <td>{{watch.get('worry')}} {{watch.get('worry') == 1 ? "minute" : "minutes"}}</td>
+            <td>{{dtime(watch.get("last_check"), "never")}}</td>
+            <td>{{dtime(watch.get("expected"), "not looking")}}</td>
+            <td>{{dtime(watch.get("next_check"), "too many failed checks")}}</td>
+            <td><i class="fa fa-edit" ng-click="editWatch(watch)"></i> <i class="fa fa-times-circle" ng-click="delete(watch)"></i></td>
+          </tr>
+          <tr ng-repeat-end="" ng-show="watch.get('show')">
+            <td></td>
+            <td></td>
+            <td colspan="4">
+              <table class="table table-striped table-hover table-condensed">
+                <thead>
+                  <td><i class="fa fa-refresh" ng-click="reloadChecks(watch)"></i> Checkin time</td>
+                  <td>Status</td>
+                  <td>Message</td>
+                </thead>
+                <tdata>
+                  <tr ng-repeat="check in watch.get('checks').models | orderBy:'id':true">
+                    <td>{{dtime(moment(check.get('instant')))}}</td>
+                    <td>{{check.get('status') ? check.get('status') : "No status"}}</td>
+                    <td>{{check.get('message') ? check.get('message') : "No message"}}</td>
+                  </tr>
+                </tdata>
+              </table>
+              <td colspan="3"></td>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+
+    </div>
+  </div>
+
+</div>
