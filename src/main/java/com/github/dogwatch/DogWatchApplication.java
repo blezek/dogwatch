@@ -166,7 +166,7 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     environment.jersey().register(new LoginResource(userDAO, HashIterations));
     environment.jersey().register(new ActivateResource(userDAO));
     environment.jersey().register(new RootResource());
-    environment.jersey().register(new LookoutResource(watchDAO));
+    environment.jersey().register(new LookoutResource(watchDAO, userDAO));
   }
 
 }

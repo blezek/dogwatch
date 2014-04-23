@@ -4,6 +4,7 @@ import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -30,6 +31,7 @@ public class User {
 
   public String email;
 
+  public String uid = UUID.randomUUID().toString();
   public Boolean activated = false;
   public String activation_hash;
 
