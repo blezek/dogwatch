@@ -44,6 +44,7 @@ dependencies {
        'io.dropwizard:dropwizard-jdbi:' + dropwizardVersion,
        'io.dropwizard:dropwizard-migrations:' + dropwizardVersion,
        'io.dropwizard:dropwizard-auth:' + dropwizardVersion,
+       'org.flywaydb:flyway-core:3.0',
        'org.apache.derby:derby:10.10.1.1',
        'org.quartz-scheduler:quartz:2.2.1',
        'org.reflections:reflections:0.9.9-RC1',
