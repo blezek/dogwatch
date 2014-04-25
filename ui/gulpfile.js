@@ -15,12 +15,13 @@ var gulp = require('gulp'),
     streamqueue = require('streamqueue'),
     uglify = require('gulp-uglify'),
     rename = require('gulp-rename'),
-    server = lr();
+    server = lr(),
+    preprocess = require('gulp-preprocess');
 
 gulp.task("default", ['watch'], function() {
 })
 
-gulp.task("build", ['ace', 'assets', 'vendor', 'app', 'style', 'bootstrap'], function() {
+gulp.task("build", ['ace', 'vendor', 'app', 'style', 'bootstrap'], function() {
 })
 
 
@@ -36,10 +37,11 @@ gulp.task('app', function() {
   gulp.src('app/*.js')
   .pipe(gulp.dest('public/js'));
 
-  gulp.src('app/*.html')
+  gulp.src('app/assets/*.html')
+  .pipe(preprocess())
   .pipe(gulp.dest('public/'));
 
-  gulp.src('app/images/*')
+  gulp.src('app/assets/images/*')
   .pipe(gulp.dest('public/images'));
 
   // Copy partials
@@ -109,14 +111,6 @@ gulp.task('bootstrap', function() {
   gulp.src('bower_components/bootstrap/dist/**')
   .pipe(gulp.dest("public/"))
 })
-
-// Assets
-gulp.task('assets', function() {
-  gulp.src('app/assets/**')
-  .pipe(gulp.dest("public/"))
-
-})
-
 
 gulp.task('lr-server', function() {
   server.listen(35729, function(err) {

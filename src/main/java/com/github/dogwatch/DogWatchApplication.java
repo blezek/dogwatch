@@ -12,7 +12,6 @@ import freemarker.template.Version;
 import io.dropwizard.Application;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
-import io.dropwizard.migrations.MigrationsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
@@ -28,6 +27,7 @@ import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.realm.jdbc.JdbcRealm.SaltStyle;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.flywaydb.core.Flyway;
 import org.secnod.dropwizard.shiro.ShiroConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,14 +54,6 @@ import com.github.dogwatch.resources.WatchResource;
 public class DogWatchApplication extends Application<DogWatchConfiguration> {
   static Logger logger = LoggerFactory.getLogger(DogWatchApplication.class);
   static int HashIterations = 100;
-
-  private final MigrationsBundle<DogWatchConfiguration> migration = new MigrationsBundle<DogWatchConfiguration>() {
-
-    @Override
-    public DataSourceFactory getDataSourceFactory(DogWatchConfiguration configuration) {
-      return configuration.getDataSourceFactory();
-    }
-  };
 
   private final HibernateBundle<DogWatchConfiguration> hibernate = new HibernateBundle<DogWatchConfiguration>(Watch.class, User.class, Role.class, Heartbeat.class) {
     @Override
@@ -107,7 +99,6 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     bootstrap.addBundle(hibernate);
     bootstrap.addBundle(shiro);
     bootstrap.addBundle(new ConfiguredAssetsBundle("/public/", "/dogwatch/", "index.html"));
-    bootstrap.addBundle(migration);
   }
 
   @Override
@@ -116,6 +107,14 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     // Register Joda time
     environment.getObjectMapper().registerModule(new JodaModule());
     environment.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    // Flyway
+    Singletons.dataSource = configuration.getDataSourceFactory().build(environment.metrics(), "dogwatch");
+
+    Flyway flyway = new Flyway();
+    flyway.setDataSource(Singletons.dataSource);
+    flyway.migrate();
+
     // Globals
     Singletons.threadPool = environment.lifecycle().executorService("dogwatch").build();
     Singletons.configuration = configuration;
@@ -123,7 +122,6 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     Singletons.jobManager = new JobManager(configuration.getDataSourceFactory());
     Singletons.objectMapper = environment.getObjectMapper();
     Singletons.sessionFactory = hibernate.getSessionFactory();
-    Singletons.dataSource = configuration.getDataSourceFactory().build(environment.metrics(), "dogwatch");
 
     // Freemarker
     BeansWrapper.getDefaultInstance().setExposeFields(true);

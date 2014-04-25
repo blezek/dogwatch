@@ -441,6 +441,6 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
   // Here is where the fun happens. angularAMD contains support for initializing an angular
   // app after the page load.
   angularAMD.bootstrap(dogwatchApp);
-  $state.transitionTo('index.index.login')
+  // $state.transitionTo('index.index.login')
   console.log ("Build dogwatch app")
 })
