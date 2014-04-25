@@ -7,7 +7,7 @@ watch: config
 
 
 install: config
-	gulp build
+	env BUILD=production gulp build
 	rsync -r public ../src/main/resources/
 
 config: node_modules bower_components
