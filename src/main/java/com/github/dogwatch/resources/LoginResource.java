@@ -13,6 +13,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.shiro.authc.AuthenticationException;
@@ -48,6 +49,8 @@ public class LoginResource {
     User user = userDAO.getFromSubject(subject);
     ObjectNode json = Singletons.objectMapper.createObjectNode();
     json.putPOJO("user", user);
+    json.put("isAuthenticated", subject.isAuthenticated());
+    json.put("isRemembered", subject.isRemembered());
     json.put("host", Singletons.configuration.dogwatch.host);
     return Response.ok(json).build();
   }
@@ -75,44 +78,6 @@ public class LoginResource {
       return Response.serverError().entity(new SimpleResponse("message", "Login failed")).build();
     }
     return Response.ok(new SimpleResponse("message", username)).build();
-  }
-
-  @UnitOfWork
-  @POST
-  @Path("/register")
-  public String register(@FormParam("username") String username, @FormParam("password") String password, @Auth Subject subject) {
-    // Note that a normal app would reference an attribute rather
-    // than create a new RNG every time:
-
-    String salt = Long.toString(rng.nextLong());
-
-    User user = new User();
-    user.email = username;
-    // Now hash the plain-text password with the random salt and multiple
-    // iterations and then Base64-encode the value (requires less space than
-    // Hex):
-    user.password = new Sha512Hash(password, ByteSource.Util.bytes(salt), hashIterations).toHex();
-    // save the salt with the new account. The HashedCredentialsMatcher
-    // will need it later when handling login attempts:
-    user.salt = salt;
-    user.activated = false;
-    user.activation_hash = UUID.randomUUID().toString();
-
-    // Add the user in the user role
-    Role role = new Role();
-    role.role = "user";
-    role.user = user;
-    user.roles.add(role);
-    user = userDAO.create(user);
-    sendActivationEmail(user);
-    userDAO.commit();
-    try {
-      subject.login(new UsernamePasswordToken(username, password));
-    } catch (AuthenticationException e) {
-      logger.error("Error loggin in", e);
-    }
-
-    return username;
   }
 
   @UnitOfWork
@@ -149,8 +114,55 @@ public class LoginResource {
 
   @UnitOfWork
   @POST
+  @Path("/register")
+  public Response register(@FormParam("username") String username, @FormParam("email") String email, @FormParam("password") String password, @Auth Subject subject) {
+    // Note that a normal app would reference an attribute rather
+    // than create a new RNG every time:
+
+    if (username == null || email == null || password == null) {
+      return Response.status(Status.BAD_REQUEST).entity(new SimpleResponse("message", "Must provide username, email and password")).build();
+    }
+
+    String salt = Long.toString(rng.nextLong());
+
+    User user = new User();
+    user.username = username;
+    user.email = username;
+    // Now hash the plain-text password with the random salt and multiple
+    // iterations and then Base64-encode the value (requires less space than
+    // Hex):
+    user.password = new Sha512Hash(password, ByteSource.Util.bytes(salt), hashIterations).toHex();
+    // save the salt with the new account. The HashedCredentialsMatcher
+    // will need it later when handling login attempts:
+    user.salt = salt;
+    user.activated = false;
+    user.activation_hash = UUID.randomUUID().toString();
+
+    // Add the user in the user role
+    Role role = new Role();
+    role.role = "user";
+    role.user = user;
+    user.roles.add(role);
+    try {
+      user = userDAO.create(user);
+    } catch (Exception e) {
+      return Response.status(Status.BAD_REQUEST).entity(new SimpleResponse("message", "Failed to create user")).build();
+    }
+    sendActivationEmail(user);
+    userDAO.commit();
+    try {
+      subject.login(new UsernamePasswordToken(username, password));
+    } catch (AuthenticationException e) {
+      logger.error("Error registering in", e);
+    }
+
+    return Response.ok().build();
+  }
+
+  @UnitOfWork
+  @POST
   @Path("/changepassword")
-  public Response register(@FormParam("hash") String hash, @FormParam("password") String password, @FormParam("password_match") String passwordMatch, @Auth Subject subject) {
+  public Response changePassword(@FormParam("hash") String hash, @FormParam("password") String password, @FormParam("password_match") String passwordMatch, @Auth Subject subject) {
     SimpleResponse r = new SimpleResponse();
     if (!password.equals(passwordMatch)) {
       r.put("updated", false);

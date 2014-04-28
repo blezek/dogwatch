@@ -3,13 +3,14 @@
 --changeset blezek:1
 create table users (
   id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  username varchar(512) NOT NULL,
   email varchar(512) NOT NULL,
   uid varchar(255) NOT NULL,
   password varchar(512),
   salt varchar(64),
   activated boolean,
   activation_hash varchar(256),
-  CONSTRAINT users_email UNIQUE ( email )
+  CONSTRAINT users_email UNIQUE ( username )
   );
 
   create index users_index_hash on users ( activation_hash );

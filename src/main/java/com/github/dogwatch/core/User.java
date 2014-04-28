@@ -29,6 +29,7 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   public long id;
 
+  public String username;
   public String email;
 
   public String uid = UUID.randomUUID().toString();

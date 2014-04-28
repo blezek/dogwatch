@@ -16,9 +16,16 @@
       </div>
 
 
-
     </div>
-    <div class="panel-body">
+
+
+    <div  class="panel-body">
+
+      <div ng-if="watches.models.length == 0">
+        <div ng-include="'partials/help.html'"/>
+      </div>
+
+     <div ng-if="watches.models.length">
      <table class="table table-striped table-hover table-condensed">
         <thead>
           <tr>
@@ -43,7 +50,7 @@
             <td>{{dtime(watch.get("last_check"), "never")}}</td>
             <td>{{dtime(watch.get("expected"), "not looking")}}</td>
             <td>{{dtime(watch.get("next_check"), "too many failed checks")}}</td>
-            <td><i class="fa fa-edit" ng-click="editWatch(watch)"></i> <i class="fa fa-times-circle" ng-click="delete(watch)"></i></td>
+            <td><i class="fa fa-play" ng-if={{!watch.get("next_check")}} ng-click="resetWatch(watch)"></i> <i class="fa fa-edit" ng-click="editWatch(watch)"></i> <i class="fa fa-times-circle" ng-click="delete(watch)"></i></td>
           </tr>
           <tr ng-repeat-end="" ng-show="watch.get('show')">
             <td></td>
@@ -68,7 +75,7 @@
           </tr>
         </tbody>
       </table>
-
+    </div>
 
     </div>
   </div>

@@ -8,11 +8,12 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-     <a class="navbar-brand" href="#">DogWatch</a>
+     <a class="navbar-brand" href="/">DogWatch</a>
           </div>
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
               <li><a ng-show="loggedIn" ui-sref="index.watches">Watches</a></li>
+              <li><a ui-sref="index.help">Help</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
         <li ng-show="loggedIn"><p class="navbar-text">Signed in as {{data.user.email}}</p></li>
@@ -20,6 +21,7 @@
 
         <li ng-hide="loggedIn"><a ui-sref="index.register">Register</a></li>
         <li ng-hide="loggedIn"><a ui-sref="index.login">Login</a></li>
+              <li><a ui-sref="index.help">Help</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div><!--/.container-fluid -->

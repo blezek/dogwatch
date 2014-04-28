@@ -55,20 +55,25 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
   dogwatchApp = angular.module('dogwatchApp', ['ui.router', 'ui.bootstrap', 'ui.ace']);
 
   dogwatchApp.config(function($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.when('', '/index/home/login')
-    $urlRouterProvider.otherwise('/index/home/login')
+    $urlRouterProvider.when('', '')
+    $urlRouterProvider.otherwise('')
     $stateProvider
     .state('index', {
       abstract: false,
-      url: "/index",
+      url: "",
       templateUrl: 'partials/dogwatch.html',
       controller: 'DogwatchController'
     })
-    .state('index.index', {
+    .state('index.home', {
       url: "/home",
       templateUrl: 'partials/dogwatch.index.html',
-      controller: 'DogwatchController'
-    }).state('index.index.login', {
+      controller: 'LoginController'
+    })
+    .state('index.help', {
+      url: "/help",
+      templateUrl: 'partials/help.html'
+    })
+    .state('index.index.login', {
       url: "/login",
       templateUrl: 'partials/login.html',
       controller: 'LoginController'
@@ -87,21 +92,25 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
       url: "/register",
       templateUrl: 'partials/register.html',
       controller: 'RegisterController'
-    }).state('index.hash', {
+    })
+    .state('index.hash', {
       abstract: false,
       url: "/hash",
       templateUrl: 'partials/hash.html',
       controller: 'LoginController'
-    }).state('index.hasherror', {
+    })
+    .state('index.hasherror', {
       abstract: false,
       url: "/hash/error",
       templateUrl: 'partials/hash.error.html'
-    }).state('index.forgot', {
+    })
+    .state('index.forgot', {
       abstract: false,
       url: "/forgotpassword",
       templateUrl: 'partials/forgot.html',
       controller: 'ForgotController'
-    }).state('index.lostpassword', {
+    })
+    .state('index.lostpassword', {
       abstract: false,
       url: "/lostpassword/:hash",
       templateUrl: 'partials/lostpassword.html',
@@ -120,17 +129,19 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
 
 dogwatchApp.controller ( 'LoginController', function($scope,$http,$location) {
   console.log("Starting Login")
-  $scope.login = function() {
+  $scope.login = function(user) {
+    console.log ("Scope: ", $scope)
     console.log ( "Login with ", $scope.user)
+    $scope.user = user
     $http(
       { url:"/login",
       method: "POST",
       data: $.param($scope.user),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     })
-      .success(function(data) {
-        $scope.$parent.checkLogin()
-        $state.transitionTo('index.watches')
+    .success(function(data) {
+      $scope.$parent.checkLogin()
+      $state.transitionTo('index.watches')
     })
     .error(function(data, status, headers, config) {
       $scope.error = data.message
@@ -148,8 +159,8 @@ dogwatchApp.controller ( 'ForgotController', function($scope,$http,$location) {
       data: $.param($scope.user),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     })
-      .success(function(data) {
-        $scope.error = data
+    .success(function(data) {
+      $scope.error = data
     })
     .error(function(data, status, headers, config) {
       $scope.error = data.message
@@ -199,14 +210,14 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
       data: $.param($scope.user),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     })
-      .success(function(data) {
-        if ( data.updated ) {
-          $state.transitionTo('index.watches')
+    .success(function(data) {
+      if ( data.updated ) {
+        $state.transitionTo('index.watches')
           // $location.url('/');
         } else {
           $scope.error = data.message
         }
-    })
+      })
     .error(function(data, status, headers, config) {
       $scope.error = data.message
     });
@@ -215,171 +226,171 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
 
 
 
-  dogwatchApp.controller ( 'WatchController', function($scope,$timeout,$state,$http,$modal) {
-    console.log("Starting WatchController");
-    $scope.watches = new WatchCollection();
-    $scope.watches.fetch({remove:true,async:false})
-    $scope.moment = moment;
-    $scope.humanize = true;
-    $scope.$parent.checkLogin();
+dogwatchApp.controller ( 'WatchController', function($scope,$timeout,$state,$http,$modal) {
+  console.log("Starting WatchController");
+  $scope.watches = new WatchCollection();
+  $scope.watches.fetch({remove:true,async:false})
+  $scope.moment = moment;
+  $scope.humanize = true;
+  $scope.$parent.checkLogin();
 
-    $scope.dtime = function(time, otherwise) {
-      if ( time == null ) { return otherwise; }
-      if ( $scope.humanize ) {
-        return moment(time).fromNow();
-      } else {
-        return moment(time).format('llll');
-      }
-      return otherwise;
+  $scope.dtime = function(time, otherwise) {
+    if ( time == null ) { return otherwise; }
+    if ( $scope.humanize ) {
+      return moment(time).fromNow();
+    } else {
+      return moment(time).format('llll');
     }
+    return otherwise;
+  }
 
 
-    $scope.status = function(watch) {
-      if ( !watch.get('next_check') ) {
-        return "danger";
-      }
-      if ( watch.get('consecutive_failed_checks') > 2 ) {
-        return "info"
-      }
-      if ( watch.get('consecutive_failed_checks') > 5 ) {
-        return "warning"
-      }
+  $scope.status = function(watch) {
+    if ( !watch.get('next_check') ) {
+      return "danger";
     }
+    if ( watch.get('consecutive_failed_checks') > 2 ) {
+      return "info"
+    }
+    if ( watch.get('consecutive_failed_checks') > 5 ) {
+      return "warning"
+    }
+  }
 
-    $scope.reload = function(){
-      $scope.watches.fetch({
-         success: function() {
-           $scope.$apply();
-           $scope.watches.models.forEach ( function(element,index,array) {
-              if ( element.get('show') ) {
-                console.log("Reloading", element)
-                $scope.reloadChecks(element)
-              }
-           });
-           $timeout($scope.reload, 60*1000);
-         },
-         error: function(model, response, options) {
-           console.log("Could not get check data")
+  $scope.reload = function(){
+    $scope.watches.fetch({
+      success: function() {
+        $scope.$apply();
+        $scope.watches.models.forEach ( function(element,index,array) {
+          if ( element.get('show') ) {
+            console.log("Reloading", element)
+            $scope.reloadChecks(element)
+          }
+        });
+        $timeout($scope.reload, 60*1000);
+      },
+      error: function(model, response, options) {
+        console.log("Could not get check data")
            // alert("Failed to retrieve data from server");
          }
        });
-    };
+  };
 
-    $scope.reload();
+  $scope.reload();
 
-    $scope.show = function(watch) {
-      watch.set("show", !watch.get("show"))
-      $scope.reloadChecks(watch);
-    };
+  $scope.show = function(watch) {
+    watch.set("show", !watch.get("show"))
+    $scope.reloadChecks(watch);
+  };
 
-    $scope.reloadChecks = function(watch) {
-      var c;
-      if ( !watch.has("checks")) {
-        c = new CheckCollection();
-        c.urlRoot = "/rest/watch/" + watch.get("id") + "/lookout"
-        watch.set("checks", c);
-      }
-      c = watch.get("checks");
-      console.log (c )
-      c.fetch({
-        success: function(data) {
-          console.log("Got the checks for ", watch)
-          $scope.$apply()
-        },
-        error: function(model, response, options) {
-          console.log("Could not get check data")
-          alert("Failed to retrieve data from server");
-        }
-      });
-
-    };
-
-
-    $scope.help = function(watch) {
-      $scope.user = $scope.$parent.user;
-      $modal.open({
-        templateUrl: 'partials/watch.help.html',
-        scope: $scope,
-        windowClass: 'wide-dialog',
-        controller: function($scope,$modalInstance) {
-          $scope.checks = new CheckCollection();
-          $scope.watch = watch;
-          $scope.checks.urlRoot = "/rest/watch/" + watch.get("id") + "/lookout"
-          $scope.checks.fetch({remove:true, async:false})
-          $scope.cancel = function() { $modalInstance.dismiss() }
-          $scope.encode = encodeURIComponent
-        }
-      })
+  $scope.reloadChecks = function(watch) {
+    var c;
+    if ( !watch.has("checks")) {
+      c = new CheckCollection();
+      c.urlRoot = "/rest/watch/" + watch.get("id") + "/lookout"
+      watch.set("checks", c);
     }
-
-    $scope.delete = function(watch) {
-      $modal.open({
-        templateUrl: 'partials/watch.delete.html',
-        scope: $scope,
-        controller: function($scope,$modalInstance) {
-          $scope.watch = watch;
-          $scope.delete = function() {
-            $scope.watches.remove(watch);
-            $scope.watch.urlRoot = "/rest/watch/";
-            $scope.watch.destroy();
-            $scope.watches.fetch({
-               success: function() { $scope.$apply(); },
-               error: function(model, response, options) {
-                 console.log("Could not get check data")
-                 alert("Failed to retrieve data from server");
-               }
-             });
-            $modalInstance.dismiss();
-            $scope.reload();
-          }
-          $scope.cancel = function() { $modalInstance.dismiss() }
-        }
-      })
-    }
-
-
-    $scope.editWatch = function(watch) {
-      console.log(watch)
-      var title = "Edit the watch"
-      if ( !watch ) {
-        title = "Create a new watch"
-        watch = new WatchModel();
+    c = watch.get("checks");
+    console.log (c )
+    c.fetch({
+      success: function(data) {
+        console.log("Got the checks for ", watch)
+        $scope.$apply()
+      },
+      error: function(model, response, options) {
+        console.log("Could not get check data")
+        alert("Failed to retrieve data from server");
       }
-      $scope.watch = watch
-      $modal.open({
-        templateUrl: 'partials/watch.edit.html',
-        scope: $scope,
-        controller: function($scope,$modalInstance) {
-          $scope.title = title
-          $scope.watchModel = watch.toJSON();
-          $scope.valid = false
+    });
 
-          $scope.validate = function(){
-            var tempWatch = new WatchModel($scope.watchModel);
-            console.log("validate", tempWatch)
-            $http.post("/rest/watch/validate", tempWatch)
-            .success(function(data) {
-              $scope.valid = data.valid
-              $scope.explanation = ""
-              $scope.error = data.messages.join("\n");
-              if ( data.explanation ) {
-                $scope.explanation = " (" + data.explanation + ")";
-              }
-            });
-          }
+  };
 
-          $scope.getTimezone = function(val) {
-            return $http.get("/rest/watch/tz", {
-              params: {
-                timezone: val
-              }
-            }).then(function(res) {
-              return res.data.timezones;
-            });
-          }
 
-          $scope.save = function(){
-            watch.set ( $scope.watchModel )
+  $scope.help = function(watch) {
+    $scope.user = $scope.$parent.user;
+    $modal.open({
+      templateUrl: 'partials/watch.help.html',
+      scope: $scope,
+      windowClass: 'wide-dialog',
+      controller: function($scope,$modalInstance) {
+        $scope.checks = new CheckCollection();
+        $scope.watch = watch;
+        $scope.checks.urlRoot = "/rest/watch/" + watch.get("id") + "/lookout"
+        $scope.checks.fetch({remove:true, async:false})
+        $scope.cancel = function() { $modalInstance.dismiss() }
+        $scope.encode = encodeURIComponent
+      }
+    })
+  }
+
+  $scope.delete = function(watch) {
+    $modal.open({
+      templateUrl: 'partials/watch.delete.html',
+      scope: $scope,
+      controller: function($scope,$modalInstance) {
+        $scope.watch = watch;
+        $scope.delete = function() {
+          $scope.watches.remove(watch);
+          $scope.watch.urlRoot = "/rest/watch/";
+          $scope.watch.destroy();
+          $scope.watches.fetch({
+            success: function() { $scope.$apply(); },
+            error: function(model, response, options) {
+              console.log("Could not get check data")
+              alert("Failed to retrieve data from server");
+            }
+          });
+          $modalInstance.dismiss();
+          $scope.reload();
+        }
+        $scope.cancel = function() { $modalInstance.dismiss() }
+      }
+    })
+  }
+
+
+  $scope.editWatch = function(watch) {
+    console.log(watch)
+    var title = "Edit the watch"
+    if ( !watch ) {
+      title = "Create a new watch"
+      watch = new WatchModel();
+    }
+    $scope.watch = watch
+    $modal.open({
+      templateUrl: 'partials/watch.edit.html',
+      scope: $scope,
+      controller: function($scope,$modalInstance) {
+        $scope.title = title
+        $scope.watchModel = watch.toJSON();
+        $scope.valid = false
+
+        $scope.validate = function(){
+          var tempWatch = new WatchModel($scope.watchModel);
+          console.log("validate", tempWatch)
+          $http.post("/rest/watch/validate", tempWatch)
+          .success(function(data) {
+            $scope.valid = data.valid
+            $scope.explanation = ""
+            $scope.error = data.messages.join("\n");
+            if ( data.explanation ) {
+              $scope.explanation = " (" + data.explanation + ")";
+            }
+          });
+        }
+
+        $scope.getTimezone = function(val) {
+          return $http.get("/rest/watch/tz", {
+            params: {
+              timezone: val
+            }
+          }).then(function(res) {
+            return res.data.timezones;
+          });
+        }
+
+        $scope.save = function(){
+          watch.set ( $scope.watchModel )
             // Add emails!
             $scope.watches.add(watch)
             watch.save({
@@ -397,12 +408,12 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
           $scope.validate();
         }
       })
-    }
+}
 
-  });
+});
 
-  dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$location,$http,$state) {
-    console.log("Starting DogwatchController")
+dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$location,$http,$state) {
+  console.log("Starting DogwatchController")
     // See if we're logged in?
     $scope.logout = function() {
       $http.post("/login/logout").success(function(data) {
@@ -430,7 +441,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
             $state.transitionTo("index.watches");
           }
         } else {
-          $location.url("/home")
+          $state.transitionTo("index.home")
         }
       })
     };
