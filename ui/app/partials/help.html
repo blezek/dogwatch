@@ -1,0 +1,109 @@
+<div class="container-fluid">
+  <div class="row">
+
+    <div class="col-md-6 col-md-offset-3">
+    <div class="jumbotron">
+      <h1>Dogwatch</h1>
+        <br>
+        <h2>Description</h2>
+      Dogwatch is a simple system to monitor <a href="http://en.wikipedia.org/wiki/Cron">cron jobs</a>.  A cron job that Dogwatch is scheduled to monitor is called a <i>Watch</i>.  Each watch uses the same <a href="http://www.quartz-scheduler.org/documentation/quartz-2.2.x/tutorials/tutorial-lesson-06">cron expression</a> as the actual job on your server, but needs to know the timezone of your server.  After a delay ("worry time"), the watch will send a reminder email.  Dogwatch stays up so you don't have to!
+    </div>
+
+    <h2>Watches</h2>
+    <br>
+    <p>
+      Creating a watch is simple.  Click on the <i class="fa fa-plus-circle"></i> in the <a ui-sref="index.watches">watch page</a>.  A watch needs some info from you for Dogwatch to monitor.
+      <table class="table table-striped table-bordered table-condensed">
+        <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Give your watch a descriptive name</td>
+        </tr>
+        <tr>
+          <td>Cron expression</td>
+          <td>When should Dogwatch expect your job to complete?  See below for some help with cron expressions.</td>
+        </tr>
+        <tr>
+          <td>Timezone</td>
+          <td>What timezone is your server in?  Dogwatch needs to know...</td>
+        </tr>
+        <tr>
+          <td>Worry time</td>
+          <td>How long do we wait before considering the job to be late.  Expressed in minutes.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Lookouts</h2>
+    <br>
+      <p>
+      When a cron job completes, it reports (a "Lookout") to the Dogwatch server.  This is simply issuing a <a href="http://en.wikipedia.org/wiki/HTTP_GET#Request_methods">http request</a> commonly done using <a href="http://curl.haxx.se/">curl</a>.
+      <br/><br/>
+      There are two ways to send a Lookout to Dogwatch, using a Watch specific URL and a User specific URL with a Watch name.
+      <br/><br/>
+    </p>
+      <h3>Watch specific URL</h3>
+      <p>
+      Each Watch has an associated key.  Issuing a lookout is simple:
+      <pre><code class="javascript">curl {{$parent.data.host}}/lookout/&lt;watch-specific-key&gt;</code></pre>
+      (Don't worry, you'll get a key when you create a watch.  Just click on the '?' next to the watch name.)
+      <p>
+        A watch can report a status and a short message using parameters:
+      <pre><code class="javascript">curl {{$parent.data.host}}/lookout/&lt;watch-specific-key&gt;?s=status&amp;m=message</code></pre>
+      Just be sure to <a href="http://www.w3schools.com/tags/ref_urlencode.asp">URL encode</a> "status" and "message" if they contain any bad characters.
+      <h3>User specific URL</h3>
+      <p>
+        Each User has an associated key<span ng-if="$parent.user"> (yours is {{$parent.user.uid}})</span>.  Keep it safe.  This key can be used to reference your Watches by name, like this:
+
+        <pre ng-if="$parent.user"><code class="javascript">curl {{$parent.data.host}}/lookout/{{$parent.user.uid}}?watch=My%20Watch</code></pre>
+        <pre ng-if="!$parent.user"><code class="javascript">curl {{$parent.data.host}}/lookout/&lt;user-key-here&gt;?watch=My%20Watch</code></pre>
+        Again, the Watch name needs to be URL encoded.  Don't get too fancy if you want things to be easy.
+
+        <h2>Notifications</h2>
+        <p>
+          Dogwatch gives up after 10 failed Watches.  Best to fix the cron job that is not reporting in, but to reset a watch, click the <i class="fa fa-play"></i> icon next to the Watch that has gone missing.
+        <br/><br/>
+
+       <h2>Example cron expressions</h2>
+       <p>
+         Have a look at the <a href="http://www.quartz-scheduler.org/documentation/quartz-2.2.x/tutorials/tutorial-lesson-06">tutorial for cron expressions</a>.  No really, go read it.
+         <br/><br/>
+         Ok, now that you are back, here are some example expressions.  Typically, you can cut and paste from your crontab, but feel free to get more fancy.
+   <table class="table table-striped table-bordered table-condensed">
+     <thead>
+       <tr>
+         <th>Expression</th>
+         <th>Description</th>
+       </tr>
+     </thead>
+        <tbody>
+        <tr>
+          <td>0 0 * * * ?</td>
+          <td>Every hour, on the hour</td>
+        </tr>
+        <tr>
+          <td>0 */5 * * * ?</td>
+          <td>Every 5 minutes, on the hour</td>
+        </tr>
+        <tr>
+          <td>0 0 3 * * ?</td>
+          <td>At 3:00, glad you don't have to stay up wating?</td>
+        </tr>
+        <tr>
+          <td>0 42 13 * * ?</td>
+          <td>At 1:42PM (13:42)</td>
+        </tr>
+        <tr>
+          <td>0 0 12 ? * WED</td>
+          <td>Every Wednesday at 12:00:00 PM</td>
+        </tr>
+      </tbody>
+    </table>
+
+    </p>        
+
+    </p>
+
+    </div>
+  </div>
+</div>
