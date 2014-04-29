@@ -443,6 +443,9 @@ dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$locatio
         } else {
           $state.transitionTo("index.home")
         }
+      }).error(function(data){
+        console.log("no login info avaliable")
+        $state.transitionTo("index.home")
       })
     };
     $scope.checkLogin();
