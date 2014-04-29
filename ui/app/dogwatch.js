@@ -424,7 +424,7 @@ dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$locatio
 
     $scope.checkLogin = function( goto ) {
       console.log("Checking if we are logged in")
-      $http.get("login").success(function(data){
+      $http.get("../login").success(function(data){
         console.log("Login info", data)
         $scope.data = data
         $scope.loggedIn = false
