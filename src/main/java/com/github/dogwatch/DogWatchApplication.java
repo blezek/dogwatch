@@ -98,7 +98,7 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
   public void initialize(Bootstrap<DogWatchConfiguration> bootstrap) {
     bootstrap.addBundle(hibernate);
     bootstrap.addBundle(shiro);
-    bootstrap.addBundle(new ConfiguredAssetsBundle("/public/", "/dogwatch/", "index.html"));
+    bootstrap.addBundle(new ConfiguredAssetsBundle("/public/", "/dogwatch", "index.html"));
   }
 
   @Override

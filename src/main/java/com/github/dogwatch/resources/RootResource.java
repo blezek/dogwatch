@@ -12,6 +12,6 @@ public class RootResource {
 
   @GET
   public Response get() throws URISyntaxException {
-    return Response.temporaryRedirect(new URI("/dogwatch/")).build();
+    return Response.temporaryRedirect(new URI("dogwatch/")).build();
   }
 }
