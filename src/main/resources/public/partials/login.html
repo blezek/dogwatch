@@ -9,7 +9,7 @@
           <form class="omb_loginForm" action="" autocomplete="off">
             <div class="input-group">
               <span class="input-group-addon"><i class="fa fa-user"></i></span>
-              <input ng-model="user.username", type="text" class="form-control" name="username" placeholder="email address">
+              <input ng-model="user.username", type="text" class="form-control" name="username" placeholder="username">
             </div>
             <span class="help-block"></span>
 
@@ -19,7 +19,7 @@
             </div>
             <span class="help-block">{{error}}</span>
 
-            <button ng-click="login()" class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+            <button ng-click="login(user)" class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
           </form>
         </div>
       </div>
