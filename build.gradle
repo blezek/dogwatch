@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'shadow'
 apply plugin: 'application'
 apply plugin: 'eclipse'
+import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
 
 // Use Java 7 by default
 sourceCompatibility = '1.6'
@@ -22,6 +23,25 @@ buildscript {
     dependencies {
       classpath 'com.github.jengelman.gradle.plugins:shadow:0.8'
     }
+}
+
+
+task assembleManifestClasspath {
+    doLast {
+        jar {
+            manifest {
+        attributes 'Main-Class': mainClassName
+        attributes("Class-Path", configurations.compile.collect { it.name }.join(' ') )
+            }
+        }
+    }
+} 
+// jar.dependsOn assembleManifestClasspath
+
+
+task collectJars(type: Copy){
+    into "$buildDir/libs/lib"
+    from configurations.compile
 }
 
 // Set our project variables
@@ -62,9 +82,17 @@ dependencies {
     )
 }
 
+jar {
+   manifest.attributes (
+        'Main-Class': mainClassName,
+        "Class-Path": configurations.compile.collect { "lib/" + it.name }.join(' ')
+     )
+}
+
+
 // Configure the shadow task
 shadow {
-
+  transformer(ServiceFileTransformer)
 }
 // Configure the run task to start the Dropwizard service
 run {
@@ -74,12 +102,6 @@ run {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.11'
-}
-
-jar {
-    manifest {
-        attributes 'Main-Class': mainClassName
-    }
 }
 
 shadow {

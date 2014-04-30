@@ -48,7 +48,6 @@ import com.github.dogwatch.managed.DBWebServer;
 import com.github.dogwatch.resources.ActivateResource;
 import com.github.dogwatch.resources.LoginResource;
 import com.github.dogwatch.resources.LookoutResource;
-import com.github.dogwatch.resources.RootResource;
 import com.github.dogwatch.resources.WatchResource;
 
 public class DogWatchApplication extends Application<DogWatchConfiguration> {
@@ -98,12 +97,11 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
   public void initialize(Bootstrap<DogWatchConfiguration> bootstrap) {
     bootstrap.addBundle(hibernate);
     bootstrap.addBundle(shiro);
-    bootstrap.addBundle(new ConfiguredAssetsBundle("/public/", "/dogwatch/", "index.html"));
+    bootstrap.addBundle(new ConfiguredAssetsBundle("/public", "/", "index.html"));
   }
 
   @Override
   public void run(DogWatchConfiguration configuration, Environment environment) throws Exception {
-
     // Register Joda time
     environment.getObjectMapper().registerModule(new JodaModule());
     environment.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -158,12 +156,12 @@ public class DogWatchApplication extends Application<DogWatchConfiguration> {
     final UserDAO userDAO = new UserDAO(hibernate.getSessionFactory());
     SimpleDAO<Heartbeat> heartbeatDAO = new SimpleDAO<Heartbeat>(hibernate.getSessionFactory());
 
+    environment.jersey().setUrlPattern("/rest/*");
     environment.jersey().register(new WatchResource(watchDAO, userDAO));
 
     // Login
     environment.jersey().register(new LoginResource(userDAO, HashIterations));
     environment.jersey().register(new ActivateResource(userDAO));
-    environment.jersey().register(new RootResource());
     environment.jersey().register(new LookoutResource(watchDAO, userDAO));
   }
 

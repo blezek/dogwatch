@@ -43,7 +43,7 @@ import com.github.dogwatch.db.UserDAO;
 import com.github.dogwatch.db.WatchDAO;
 import com.google.common.base.Optional;
 
-@Path("/rest/watch")
+@Path("/watch")
 public class WatchResource {
 
   private final WatchDAO watchDAO;
