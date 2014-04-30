@@ -37,9 +37,13 @@ gulp.task('app', function() {
   gulp.src('app/*.js')
   .pipe(gulp.dest('public/js'));
 
-  gulp.src('app/assets/*.html')
-  .pipe(preprocess())
-  .pipe(gulp.dest('public/'));
+gulp.src('app/assets/*.html')
+.pipe(preprocess())
+.pipe(gulp.dest('public/'));
+
+gulp.src('app/assets/css/**')
+.pipe(preprocess())
+.pipe(gulp.dest('public/'));
 
   gulp.src('app/assets/images/*')
   .pipe(gulp.dest('public/images'));
@@ -54,7 +58,7 @@ gulp.task('app', function() {
 // CSS using Styl
 gulp.task('style', function() {
   gulp.src([
-    'app/assets/*.css',
+    'app/assets/css/*.css',
     'app/styles/*.css',
     'bower_components/font-awesome/css/font-awesome*.css'
     ])

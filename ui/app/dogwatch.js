@@ -20,6 +20,12 @@ require.config({
 // To work, the model, angular and angularAMD packages are required
 require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui-bootstrap-tpls', 'ui-ace', 'ace/ace' ], function(angular, angularAMD, Backbone, moment ) {
 
+
+  // NB: all rest calls are relative to this JS file
+  var REST = function ( uri ) {
+    return "../rest/" + uri
+  }
+
   // Helper for shortening strings
   String.prototype.trunc = String.prototype.trunc ||
   function(n){
@@ -43,7 +49,7 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
 
   WatchCollection = Backbone.Collection.extend({
     model: WatchModel,
-    url: '/rest/watch',
+    url: REST ('watch'),
   });
 
   CheckModel = Backbone.Model.extend({});
@@ -134,7 +140,7 @@ dogwatchApp.controller ( 'LoginController', function($scope,$http,$location) {
     console.log ( "Login with ", $scope.user)
     $scope.user = user
     $http(
-      { url:"/login",
+      { url:REST("login"),
       method: "POST",
       data: $.param($scope.user),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -154,7 +160,7 @@ dogwatchApp.controller ( 'ForgotController', function($scope,$http,$location) {
   $scope.reset = function() {
     console.log ( "Forgot with ", $scope.user)
     $http(
-      { url:"/login/lostpassword",
+      { url:REST("login/lostpassword"),
       method: "POST",
       data: $.param($scope.user),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -169,7 +175,7 @@ dogwatchApp.controller ( 'ForgotController', function($scope,$http,$location) {
 });
 
 
-dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) {
+dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location,$state) {
   console.log("Starting Register")
   $scope.user = { agree: false, password:null }
   $scope.register = function() {
@@ -182,13 +188,13 @@ dogwatchApp.controller ( 'RegisterController', function($scope,$http,$location) 
 
     console.log ( "Register with ", $scope.user)
     $http(
-      { url:"/login/register",
+      { url:REST("login/register"),
       method: "POST",
       data: $.param($scope.user),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     }).success(function(data, status, headers, config) {
       console.log(data)
-      $location.url('/');
+      $state.transitionTo("index.home");
       $scope.$parent.checkLogin();
     }).error(function(data, status, headers, config) {
       $scope.error = data.message
@@ -205,7 +211,7 @@ dogwatchApp.controller ( 'LostPasswordController', function($scope,$http,$locati
 
     console.log ( "Register with ", $scope.user)
     $http(
-      { url:"/login/changepassword",
+      { url:REST("login/changepassword"),
       method: "POST",
       data: $.param($scope.user),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -287,7 +293,7 @@ dogwatchApp.controller ( 'WatchController', function($scope,$timeout,$state,$htt
     var c;
     if ( !watch.has("checks")) {
       c = new CheckCollection();
-      c.urlRoot = "/rest/watch/" + watch.get("id") + "/lookout"
+      c.urlRoot = REST ("watch/" + watch.get("id") + "/lookout")
       watch.set("checks", c);
     }
     c = watch.get("checks");
@@ -331,7 +337,7 @@ dogwatchApp.controller ( 'WatchController', function($scope,$timeout,$state,$htt
         $scope.watch = watch;
         $scope.delete = function() {
           $scope.watches.remove(watch);
-          $scope.watch.urlRoot = "/rest/watch/";
+          $scope.watch.urlRoot = REST("watch/");
           $scope.watch.destroy();
           $scope.watches.fetch({
             success: function() { $scope.$apply(); },
@@ -368,7 +374,7 @@ dogwatchApp.controller ( 'WatchController', function($scope,$timeout,$state,$htt
         $scope.validate = function(){
           var tempWatch = new WatchModel($scope.watchModel);
           console.log("validate", tempWatch)
-          $http.post("/rest/watch/validate", tempWatch)
+          $http.post( REST("watch/validate"), tempWatch)
           .success(function(data) {
             $scope.valid = data.valid
             $scope.explanation = ""
@@ -380,7 +386,7 @@ dogwatchApp.controller ( 'WatchController', function($scope,$timeout,$state,$htt
         }
 
         $scope.getTimezone = function(val) {
-          return $http.get("/rest/watch/tz", {
+          return $http.get(REST("watch/tz"), {
             params: {
               timezone: val
             }
@@ -416,7 +422,7 @@ dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$locatio
   console.log("Starting DogwatchController")
     // See if we're logged in?
     $scope.logout = function() {
-      $http.post("/login/logout").success(function(data) {
+      $http.post(REST("login/logout")).success(function(data) {
         $scope.checkLogin()
       });
     };
@@ -424,7 +430,7 @@ dogwatchApp.controller ( 'DogwatchController', function($scope,$timeout,$locatio
 
     $scope.checkLogin = function( goto ) {
       console.log("Checking if we are logged in")
-      $http.get("../login").success(function(data){
+      $http.get(REST("login")).success(function(data){
         console.log("Login info", data)
         $scope.data = data
         $scope.loggedIn = false
