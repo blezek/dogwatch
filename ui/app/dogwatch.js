@@ -23,7 +23,7 @@ require(['angular', 'angularAMD', "backbone", 'moment', 'angular-ui-router', 'ui
 
   // NB: all rest calls are relative to this JS file
   var REST = function ( uri ) {
-    return "../rest/" + uri
+    return "rest/" + uri
   }
 
   // Helper for shortening strings
